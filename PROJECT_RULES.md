@@ -1,0 +1,190 @@
+# Kesser Tenant Financial Monitoring — Project Rules & Decisions
+
+This file is the persistent source of truth for the business rules, mapping
+decisions, and known-bug history behind this system. It exists so this
+knowledge survives across sessions instead of living only in chat history.
+Any change to a rule below should be made here first, then reflected in code.
+
+## 1. Purpose
+
+Kesser is a real estate company that owns nursing home (SNF) properties and
+leases them to third-party operators. This system tracks tenant (operator)
+financial health per facility per period so Kesser can monitor continued
+ability to pay rent. It replaces a prior Power BI report.
+
+## 2. Operators and Source File Formats
+
+| Operator | Brands covered | Source format |
+|---|---|---|
+| **Curis** | Axiom, Arcadia, Goldwater, Avenues, Villas, Gardens | Consolidated multi-facility statements (one workbook, one column per facility, per facility-group e.g. "Petersen Group") |
+| **Extendicare** | Extended Care, Haven | T12 Budget vs. Actual, single-facility files |
+| **Lincoln** | — | Multi-facility income statements + separate census files |
+| **Lineage** | — | QuickBooks Desktop T12 exports |
+| **Evercare** | — | Single-facility, trailing-12 tabs |
+| **Aliya** | — | YTD detailed hierarchical P&L, up to 5 levels of indentation |
+
+Note: "Petersen" is not an operator — it is a Curis **facility group** name
+(header: `Curis Services` / `Facility group: Petersen Group`), covering a
+set of Axiom-brand facilities (Axiom Gardens Flora, Axiom Flora, Axiom
+Gardens Mount Vernon, Axiom West Frankfort, Axiom Mount Vernon, Axiom
+Rosiclare, Axiom Harrisburg, etc.). Files named `*Petersen*` and
+`*Peterson*` (both spellings appear in source filenames) are Curis-operator
+raw files.
+
+Stern is no longer a tenant. COR HC Partners LLC has no financials to load
+(do not treat its absence as a load failure).
+
+## 3. Core Taxonomy Rules
+
+- **Expense accounts** get the specific department category — Nursing,
+  Dietary, Ancillary, Plant, Housekeeping, Laundry and Linen, Activities,
+  Social Service, Employee Welfare, Marketing, General and Administrative,
+  Management Fees. Never bucket into a generic "Other" when a specific
+  category applies.
+- **Revenue accounts** are categorized only by payor — never further split
+  by service type.
+- **Net Income is the correctness test, not department-level subtotals.**
+  The mapping intentionally reclassifies accounts away from each operator's
+  own internal categorization. Only the bottom-line Net Income needs to tie
+  out to the source; department subtotals are allowed to differ from the
+  operator's own presentation.
+- **Sign multiplier**: some source accounts are stored negative when they
+  should be treated as positive expense/revenue (or vice versa). Apply
+  `dim_account_mapping.sign_multiplier = -1` where needed. This has been a
+  repeated source of bugs — always verify against the source's own Net
+  Income after mapping, not just visually. Known example: Bed Tax /
+  Rev-Assessment Tax.
+
+## 4. Specific Mapping Decisions
+
+- **Regional Allocation** costs stay in their originating department
+  (Dietary / Nursing / Plant / Social Service / G&A) — do not move them to
+  a corporate/other bucket. Their `Detail` value is `"Other"`, not
+  `"Salaries"`.
+- **Management Fees** get their own Sub-Group: `"Management Fees"`.
+- **Provider Assessment Fees** map to G&A, Detail = `"Licenses and Provider
+  Fee"`.
+- **"Consulting"** as an account label refers to **Cherry**, a
+  software/vendor cost — not a generic consulting expense. Map accordingly,
+  not to a generic consulting line.
+- **"Prior Year Expenses/Adjustments"** is Revenue / Other, not an expense,
+  regardless of which section of the source it appears in.
+- **Kesser's own revenue** (`fact_kesser_revenue`, the rent side) is
+  **effective-dated, not monthly**. Rent changes only at step-ups. Do not
+  require a row for every month — carry the last known effective value
+  forward until the next dated entry.
+
+## 5. Payor Alias Consolidation
+
+Apply consistently to **both** census and revenue sides.
+
+| Source label(s) | Canonical payor |
+|---|---|
+| "Insurance/Commerical" (typo), "Insurance", "Insurance - Commercial" | **Insurance/Commercial** |
+| "Medicare Advantage" | **Managed Medicare** |
+| "Medicare MMAI" | **Managed Medicare** (dual-eligible; when the stay is Medicare-covered, Medicare rates apply) |
+| "Medicaid MMAI" | **Managed Medicaid** |
+| "Medicaid Pending" | **Medicaid** |
+
+### Operator-specific hospice folding
+
+- **Curis only**: "Hospice Medicaid" and "Hospice Medicaid Pending" →
+  **Medicaid**. Curis has no separate Hospice revenue line — hospice
+  residents' room & board revenue sits entirely inside "Resident Income
+  Medicaid," while census counts hospice days separately. Without folding,
+  Medicaid PPD is overstated ~18%.
+  - Verified: Arcadia Aledo, April 2026 — $146,115 ÷ 489 days = $298.80
+    (wrong, hospice days excluded) vs. $146,115 ÷ 579 days = $252.36
+    (correct, hospice days included).
+  - This fix was verified in the prior build but never deployed — it must
+    be live from day one here.
+- **Lincoln**: hospice census also maps to Medicaid, same reasoning (no
+  separate hospice revenue line). Flagged as an interim decision
+  previously — treat as correct for now; revisit only if evidence says
+  otherwise.
+- **Evercare: do NOT fold.** Evercare reports its own proper Hospice
+  revenue line, and per-diem rates for Hospice and Medicaid can
+  legitimately match (verified: Collinsville, April 2026 — both
+  $214.80/day). That is real data, not a mapping artifact.
+
+## 6. Validation Rule (gate before anything is "loaded")
+
+After every load:
+
+```
+recomputed Net Income = Revenue − Operating Expense − Capital Expenses
+```
+
+This must match the source file's own reported Net Income within **$50**.
+If it does not, the load fails and is written to `exceptions_log` — nothing
+downstream (metrics, dashboard) reads data that hasn't passed this check.
+
+## 7. Metrics / Waterfall Formulas
+
+Computed per facility-period:
+
+```
+Operating Revenue              = Resident Income + Ancillary + QIP
+Operating Expense              = all department sub-groups except G&A and
+                                  Management Fees
+                                  (includes "Other Income / Expense" as a
+                                  sub-group under Operating Expense — this
+                                  placement is specific to Evercare)
+Operating Income                = Operating Revenue − Operating Expense
+EBITDARM                        = Operating Income − G&A
+EBIDARM                         = EBITDARM − Real Estate Tax
+Earnings before Management Fees = EBIDARM − Capital Expenses
+Earnings                        = Earnings before Management Fees
+                                   − Management Fees
+NOI                              = Earnings + Other Income/Expense
+                                   (QIP excluded here — already counted in
+                                   Operating Revenue)
+```
+
+## 8. Known Past Bugs — Do Not Reintroduce
+
+- **Lineage mapping file**: had two columns both named `Merged.2`
+  (duplicate column name) → caused phantom mapping errors. Always
+  de-duplicate/validate column headers on load, don't assume uniqueness.
+- **Curis addbacks detection**: must use **structural detection** (position/
+  indentation/section boundaries), not a keyword whitelist — label variants
+  were previously missed. Prefer a blacklist + structural approach.
+- **Extendicare payor-subtotal detection**: must be narrow. An earlier,
+  overly broad subtotal detector excluded real leaf accounts that happened
+  to share a header name with a subtotal row.
+- **Lincoln extra metadata row**: some files insert an extra row that
+  shifts all fixed positions. Use dynamic header detection (search for
+  header markers), never fixed row numbers.
+- **Lincoln facility renames**: two facilities were renamed mid-stream.
+  Look up by both old and new names, case-insensitively.
+- **Aliya indentation hierarchy**: up to 5 levels deep. Must track
+  indentation depth with an explicit stack, not keyword matching, to
+  correctly attribute child accounts to the right parent category.
+
+## 9. Database Schema (see `db/migrations/` for DDL)
+
+- `dim_facility`
+- `dim_operator`
+- `dim_account_mapping` (includes `sign_multiplier`)
+- `fact_tenant_financials`
+- `fact_census`
+- `fact_kesser_revenue` (effective-dated, forward-filled — see §4)
+- `fact_reported_net_income`
+- `exceptions_log`
+- External Medicaid/CMS reference data: `fact_hfs_rates`, `fact_qip_payments`,
+  `fact_cna_payments`, `fact_cms_ratings`
+
+## 10. Parsers
+
+One parser module per operator (`parsers/<operator>.py`), each responsible
+for: locating the header/period, extracting the account hierarchy per its
+own structural quirks (see §8), mapping through `dim_account_mapping`,
+applying `sign_multiplier`, and producing rows for
+`fact_tenant_financials` / `fact_census`. Every parser run must pass
+through the validation module (§6) before rows are marked loaded.
+
+## 11. Hosting
+
+Web front end (replacement for the old Power BI report) — pages to be
+designed once the data layer is validated end-to-end for at least one
+operator.
