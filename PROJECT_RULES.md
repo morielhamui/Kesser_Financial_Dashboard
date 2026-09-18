@@ -263,6 +263,27 @@ applying `sign_multiplier`, and producing rows for
 `fact_tenant_financials` / `fact_census`. Every parser run must pass
 through the validation module (§6) before rows are marked loaded.
 
+## 10a. Known Data Gaps (as of initial load)
+
+Tracked so they aren't mistaken for load failures — every one of these is
+an absence of source data, not a parsing bug. All 7 operators otherwise
+validate 100% (1,856 facility-periods, 0 failures) as of this writing.
+
+- **Aliya**: no raw files for Glenwood/Palatine's sibling facilities —
+  only 2 of Aliya's facilities have any data at all.
+- **Lincoln**: no separate census file was ever provided, despite the
+  spec calling for one (income statement + separate census files).
+  Census is not loaded for Lincoln.
+- **Lineage**: Ironwood (a 5th Lineage facility per the facility master)
+  has zero raw files.
+- **Evercare**: Edwardsville and Evercare University (2 of Evercare's 7
+  facilities per the facility master) have zero raw files. Also, the
+  Breese tab in one specific file (`fce47447-4_Pack_PL_12.25.xlsx`) is
+  entirely blank — skipped, not a failure.
+- **Allure**: Sterling has zero raw files.
+- **Extendicare**: 4 Balance Sheet files (no P&L/Net Income data) are
+  intentionally skipped by the parser, not counted as failures.
+
 ## 11. Hosting
 
 Web front end (replacement for the old Power BI report) — pages to be
