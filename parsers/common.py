@@ -262,14 +262,21 @@ def insert_financial_fact(
     source_row_ref: str,
     load_batch_id: str,
 ) -> None:
+    # Additive on conflict, not a replace: the same raw account label can
+    # legitimately appear twice in one source file under two different
+    # subgroups that both map to the same canonical mapping_id (e.g.
+    # Lincoln's "Depreciation Expense" appears under both "General
+    # Expenses" and "Property Expenses") -- both amounts are real and must
+    # be summed, matching insert_census_fact's own merge behavior. A
+    # REPLACE here would silently drop one of the two amounts.
     conn.execute(
         """
         INSERT INTO fact_tenant_financials
             (facility_id, period_date, mapping_id, amount, source_file, source_row_ref, load_batch_id)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(facility_id, period_date, mapping_id, source_file) DO UPDATE SET
-            amount = excluded.amount,
-            source_row_ref = excluded.source_row_ref,
+            amount = fact_tenant_financials.amount + excluded.amount,
+            source_row_ref = fact_tenant_financials.source_row_ref || ',' || excluded.source_row_ref,
             load_batch_id = excluded.load_batch_id,
             loaded_at = datetime('now')
         """,
