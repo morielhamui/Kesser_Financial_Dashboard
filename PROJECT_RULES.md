@@ -52,6 +52,53 @@ vs "Allure"), `Landlord Name`, `Previous Name` (→ `dim_facility_alias`),
 appears in financial statements), `New Name`, address/state/county,
 bed counts, `Facility ID`, `Licensee ID`, Medicare certification number.
 
+## 2b. Master Account Mapping (source of truth)
+
+`data/reference/kesser_master_account_mapping.xlsx` is the authoritative
+mapping for **Curis, Lineage, Extendicare, Evercare, Lincoln** (999
+combined rows across those 5 operators; does not cover Aliya or Allure,
+both discovered/added after this file was built — those two use
+parser-local heuristics until a master mapping row set exists for them).
+Loaded via `db/seed/load_master_mapping.py` into `dim_account_mapping`.
+
+Sheet shape: `Operator, Raw Account, Grouping, Sub-Group, Detail, Payor,
+Sign Multiplier, Exclude (subtotal)`, plus a `Sign Adjustments` tab (same
+shape minus Payor, for accounts the source stores negative that must flip
+sign — e.g. Extendicare's `Bed Tax` / `Rev - Assessment Tax`) and a
+`Cross-Operator Concepts` tab (precedent for reused labels across
+operators — check it before deciding a new account's mapping).
+
+Column mapping into `dim_account_mapping`:
+- `Grouping` → `statement_type` (`revenue` | `opex` | `capital`; see §6 for
+  why this is a broad bucket, not the narrower metrics-layer concept)
+- `Sub-Group` → `category` (department: Nursing, Ancillary, General and
+  Administrative, Management Fees, Marketing, Resident Income, Other
+  Income / Expense, Capital Expenses, ...)
+- `Detail` → `detail` (Salaries, Supplies, Therapy, Rent, Other, ...)
+- `Payor` → `payor` (mainly populated for Ancillary opex rows split by
+  payor+service, and Revenue rows split by payor)
+- Rows with blank `Grouping` and/or `Exclude=1` are section/department
+  subtotals (e.g. the bare label "Nursing Expenses", or the AC sheet's own
+  "Gross Resident Income" aggregate) — never loaded as accounts; parsers
+  must skip them structurally (by section/indentation), not by consulting
+  this exclude flag directly, since a subtotal that slips through would
+  double-count.
+- `Grouping="Census"` rows are not loaded into `dim_account_mapping` at
+  all (census isn't GL-coded). Instead their `Detail` column is the
+  authoritative canonical-payor lookup for census parsing — use
+  `db/seed/load_master_mapping.get_census_payor_map()` rather than
+  hand-maintaining a separate alias table per operator, for any operator
+  this mapping covers.
+
+Confirmed by hand-tracing the arithmetic (Curis, Petersen Group, 05/2025):
+Revenue = full `Resident Income <Payor>` detail (not the AC sheet's netted
+"Total Net Resident Income") + all Other Income/Expense items; Operating
+Expense = every department GL account **including** Nursing Home Fee
+(reclassified to G&A) and the by-payor-by-service Ancillary Expense detail
+(reclassified from what Curis's own sheet calls a revenue deduction into a
+real Operating Expense department, `category="Ancillary"`). This reproduces
+the source's reported Net Income to the dollar.
+
 ## 3. Core Taxonomy Rules
 
 - **Expense accounts** get the specific department category — Nursing,
@@ -136,6 +183,21 @@ recomputed Net Income = Revenue − Operating Expense − Capital Expenses
 This must match the source file's own reported Net Income within **$50**.
 If it does not, the load fails and is written to `exceptions_log` — nothing
 downstream (metrics, dashboard) reads data that hasn't passed this check.
+
+**Important nuance** (confirmed against the master account mapping's own
+README): in this 3-term formula, "Operating Expense" is a **broad**
+grouping bucket — it includes G&A, Management Fees, and any
+operator-specific reclassified items (e.g. Curis's Nursing Home Fee is
+reclassified into G&A/"Licenses and Provider Fee" here), not just
+department-level opex. "Revenue" likewise includes the full Other
+Income/Expense section (Interest Income, QIP, CNA Incentive, etc.), not
+just resident income by payor. `dim_account_mapping.statement_type` takes
+exactly these 3 values (`revenue` | `opex` | `capital`) — one per row from
+the master mapping's `Grouping` column. The **narrower** "Operating
+Expense" used in the metrics waterfall (§7, which excludes G&A and
+Management Fees) is a separate, later concept computed from the same rows
+by filtering on `category`/`sub_group` — it is not what this validation
+gate checks.
 
 ## 7. Metrics / Waterfall Formulas
 
