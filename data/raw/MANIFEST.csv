@@ -16,6 +16,7 @@ original_filename,operator,detail,dest_path,size_bytes
 1596e7fa-06.30.25_Petersen_Financial_Statements_-_MTD_Only.xls,Curis,Petersen Group consolidated statement,data/raw/curis/1596e7fa-06.30.25_Petersen_Financial_Statements_-_MTD_Only.xls,96776
 1a044c05-07.31.25_Petersen_Financial_Statements_-_MTD_Only.xls,Curis,Petersen Group consolidated statement,data/raw/curis/1a044c05-07.31.25_Petersen_Financial_Statements_-_MTD_Only.xls,101376
 1bc32af7-02.28.26_Petersen_Financial_Statements_-_MTD_Only_NO_ADDBACKS.xls,Curis,Petersen Group consolidated statement,data/raw/curis/1bc32af7-02.28.26_Petersen_Financial_Statements_-_MTD_Only_NO_ADDBACKS.xls,90901
+1cefcbb3-202607_Aliya_of_Palatine.xlsx,Aliya,ALIYA HEALTHCARE CONSULTING LLC multi-sheet workbook (Balance Sheet + P&L Trailing YTD Detailed),data/raw/aliya/1cefcbb3-202607_Aliya_of_Palatine.xlsx,91227
 1e44ee27-Lincoln_Income_Statement__by_Facility_Preliminary_2.28.25.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/1e44ee27-Lincoln_Income_Statement__by_Facility_Preliminary_2.28.25.xlsx,15116
 1f82689a-South_Elgin_PL_02282026.xlsm,Lineage,Facility PL export (.xlsm),data/raw/lineage/1f82689a-South_Elgin_PL_02282026.xlsm,342469
 20a8893e-St_Elmo_T12__Budget_01.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/20a8893e-St_Elmo_T12__Budget_01.2026.xlsx,60554
@@ -49,6 +50,7 @@ original_filename,operator,detail,dest_path,size_bytes
 4473bb53-Meadowbrook_T12__Budget_11.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/4473bb53-Meadowbrook_T12__Budget_11.2025.xlsx,62460
 4477490d-Arcola_Balance_Sheet_12.2024.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/4477490d-Arcola_Balance_Sheet_12.2024.xlsx,19582
 447c0034-Arcola_T12__Budget_vs_Actual_03.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/447c0034-Arcola_T12__Budget_vs_Actual_03.2025.xlsx,44584
+46d8011b-202607_Aliya_of_Glenwood.xlsx,Aliya,ALIYA HEALTHCARE CONSULTING LLC multi-sheet workbook (Balance Sheet + P&L Trailing YTD Detailed),data/raw/aliya/46d8011b-202607_Aliya_of_Glenwood.xlsx,96663
 49561c3b-St_Elmo_T12__Budget_12.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/49561c3b-St_Elmo_T12__Budget_12.2025.xlsx,59307
 4a6680dd-St_Elmo_T12__Budget_06.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/4a6680dd-St_Elmo_T12__Budget_06.2026.xlsx,64196
 4e03cd69-Bement_T12__Budget_04.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/4e03cd69-Bement_T12__Budget_04.2026.xlsx,61132

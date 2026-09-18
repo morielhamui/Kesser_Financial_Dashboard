@@ -105,6 +105,9 @@ def classify(filename: str, sheet_names, header_cells):
     header_blob = " | ".join(header_cells)
     sheet_set = set(sheet_names)
 
+    if "ALIYA" in header_blob.upper() or re.match(r"^\d{6}_Aliya_of_", filename, re.IGNORECASE):
+        return "Aliya", "ALIYA HEALTHCARE CONSULTING LLC multi-sheet workbook (Balance Sheet + P&L Trailing YTD Detailed)"
+
     if "Curis Services" in header_blob or (
         "Petersen Group" in header_blob or "Facility Group" in header_blob or "Facility group" in header_blob
     ):
