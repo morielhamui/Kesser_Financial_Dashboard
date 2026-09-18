@@ -1,0 +1,186 @@
+original_filename,operator,detail,dest_path,size_bytes
+04088374-Mendota_PL_2026-06.csv,Allure,Income Statement Trending Detail - GGM,data/raw/allure/04088374-Mendota_PL_2026-06.csv,22283
+0554e3fe-St_Elmo_T12__Budget_05.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/0554e3fe-St_Elmo_T12__Budget_05.2025.xlsx,41492
+0557989f-Meadowbrook_T12__Budget_03.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/0557989f-Meadowbrook_T12__Budget_03.2026.xlsx,61595
+067eff45-Lincoln_Income_Statement__by_Facility_Preliminary_1.31.26.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/067eff45-Lincoln_Income_Statement__by_Facility_Preliminary_1.31.26.xlsx,15322
+078d20de-10.31.25_Petersen_Financial_Statements_-_MTD_Only.xls,Curis,Petersen Group consolidated statement,data/raw/curis/078d20de-10.31.25_Petersen_Financial_Statements_-_MTD_Only.xls,93118
+0bdd32b0-2025_YE_Peru_Financial_Statements.xlsx,Allure,Income Statement Trending Detail - GGM,data/raw/allure/0bdd32b0-2025_YE_Peru_Financial_Statements.xlsx,130284
+0d46ccab-Meadowbrook_T12__Budget_vs_Actual_03.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/0d46ccab-Meadowbrook_T12__Budget_vs_Actual_03.2025.xlsx,44608
+0e91e018-Bement_T12__Budget_01.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/0e91e018-Bement_T12__Budget_01.2026.xlsx,53920
+1038ca53-Arcola_T12__Budget_05.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/1038ca53-Arcola_T12__Budget_05.2026.xlsx,62591
+104c1d3e-Arcola_T12__Budget_03.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/104c1d3e-Arcola_T12__Budget_03.2026.xlsx,62772
+125dde64-Tuscola_T12__Budget_08.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/125dde64-Tuscola_T12__Budget_08.2025.xlsx,58745
+13485915-Arcola_T12__Budget_vs_Actual_01.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/13485915-Arcola_T12__Budget_vs_Actual_01.2025.xlsx,38933
+14ed4659-Farmer_City_T12__Budget_03.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/14ed4659-Farmer_City_T12__Budget_03.2026.xlsx,56237
+150dd2b3-Bement_T12__Budget_vs_Actual_01.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/150dd2b3-Bement_T12__Budget_vs_Actual_01.2025.xlsx,37801
+1596e7fa-06.30.25_Petersen_Financial_Statements_-_MTD_Only.xls,Curis,Petersen Group consolidated statement,data/raw/curis/1596e7fa-06.30.25_Petersen_Financial_Statements_-_MTD_Only.xls,96776
+1a044c05-07.31.25_Petersen_Financial_Statements_-_MTD_Only.xls,Curis,Petersen Group consolidated statement,data/raw/curis/1a044c05-07.31.25_Petersen_Financial_Statements_-_MTD_Only.xls,101376
+1bc32af7-02.28.26_Petersen_Financial_Statements_-_MTD_Only_NO_ADDBACKS.xls,Curis,Petersen Group consolidated statement,data/raw/curis/1bc32af7-02.28.26_Petersen_Financial_Statements_-_MTD_Only_NO_ADDBACKS.xls,90901
+1e44ee27-Lincoln_Income_Statement__by_Facility_Preliminary_2.28.25.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/1e44ee27-Lincoln_Income_Statement__by_Facility_Preliminary_2.28.25.xlsx,15116
+1f82689a-South_Elgin_PL_02282026.xlsm,Lineage,Facility PL export (.xlsm),data/raw/lineage/1f82689a-South_Elgin_PL_02282026.xlsm,342469
+20a8893e-St_Elmo_T12__Budget_01.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/20a8893e-St_Elmo_T12__Budget_01.2026.xlsx,60554
+23039204-Farmer_City_T12__Budget_vs_Actual_03.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/23039204-Farmer_City_T12__Budget_vs_Actual_03.2025.xlsx,44731
+23300cb7-Lincoln_Income_Statement__by_Facility_Preliminary_5.31.26.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/23300cb7-Lincoln_Income_Statement__by_Facility_Preliminary_5.31.26.xlsx,17775
+23a75132-Bridgeport_T12__Budget_06.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/23a75132-Bridgeport_T12__Budget_06.2025.xlsx,44722
+24a4e791-Farmer_City_T12__Budget_vs_Actual_02.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/24a4e791-Farmer_City_T12__Budget_vs_Actual_02.2025.xlsx,41188
+28350f93-Meadowbrook_T12__Budget_08.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/28350f93-Meadowbrook_T12__Budget_08.2025.xlsx,56885
+2a259038-Bridgeport_T12__Budget_07.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/2a259038-Bridgeport_T12__Budget_07.2025.xlsx,46607
+2aa6186c-Farmer_City_T12__Budget_05.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/2aa6186c-Farmer_City_T12__Budget_05.2025.xlsx,50161
+2b564fd8-Lincoln_Income_Statement__by_Facility_Preliminary_4.30.26.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/2b564fd8-Lincoln_Income_Statement__by_Facility_Preliminary_4.30.26.xlsx,14471
+2bba6968-Tuscola_T12__Budget_12.2024.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/2bba6968-Tuscola_T12__Budget_12.2024.xlsx,36473
+2cc688e1-St_Elmo_T12__Budget_10.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/2cc688e1-St_Elmo_T12__Budget_10.2025.xlsx,53356
+2d4a7c3e-Lincoln_Income_Statement__by_Facility_Preliminary_11.30.25.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/2d4a7c3e-Lincoln_Income_Statement__by_Facility_Preliminary_11.30.25.xlsx,15252
+2e4cf510-Meadowbrook_T12__Budget_06.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/2e4cf510-Meadowbrook_T12__Budget_06.2025.xlsx,52606
+2ed05d5f-Lincoln_Income_Statement__by_Facility_Preliminary_4.30.25.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/2ed05d5f-Lincoln_Income_Statement__by_Facility_Preliminary_4.30.25.xlsx,15374
+2fa1f8bc-Farmer_City_T12__Budget_12.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/2fa1f8bc-Farmer_City_T12__Budget_12.2025.xlsx,62846
+312c30f2-Tuscola_T12__Budget_07.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/312c30f2-Tuscola_T12__Budget_07.2025.xlsx,55721
+31bc6397-Bridgeport_T12__Budget_03.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/31bc6397-Bridgeport_T12__Budget_03.2026.xlsx,63855
+32f2b992-Bement_T12__Budget_06.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/32f2b992-Bement_T12__Budget_06.2025.xlsx,55261
+34637c24-Farmer_City_T12__Budget_08.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/34637c24-Farmer_City_T12__Budget_08.2025.xlsx,63953
+355bd3c4-Petersen_Breese_PL_June_26.xlsx,Evercare,Petersen 4-Pack by-tab workbook (Evercare),data/raw/evercare/355bd3c4-Petersen_Breese_PL_June_26.xlsx,62656
+3588af12-Lincoln_Income_Statement__by_Facility_Preliminary_12.31.25.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/3588af12-Lincoln_Income_Statement__by_Facility_Preliminary_12.31.25.xlsx,20666
+37d340b6-2025_YE_Walnut_Combined_Financial_Statements.xlsx,Allure,Income Statement Trending Detail - GGM,data/raw/allure/37d340b6-2025_YE_Walnut_Combined_Financial_Statements.xlsx,285471
+3a6a7bcf-Meadowbrook_T12__Budget_12.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/3a6a7bcf-Meadowbrook_T12__Budget_12.2025.xlsx,62339
+3b331fb8-Peterson_Financials_Jan26_by_Tab.xlsx,Evercare,Petersen 4-Pack by-tab workbook (Evercare),data/raw/evercare/3b331fb8-Peterson_Financials_Jan26_by_Tab.xlsx,53859
+3bfc40e4-Bridgeport_T12__Budget_04.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/3bfc40e4-Bridgeport_T12__Budget_04.2025.xlsx,38831
+40024af8-Bridgeport_T12__Budget_04.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/40024af8-Bridgeport_T12__Budget_04.2026.xlsx,64483
+40f26547-South_Elgin_PL_063026.xlsm,Lineage,Facility PL export (.xlsm),data/raw/lineage/40f26547-South_Elgin_PL_063026.xlsm,335572
+42f4fbcf-Meadowbrook_T12__Budget_vs_Actual_02.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/42f4fbcf-Meadowbrook_T12__Budget_vs_Actual_02.2025.xlsx,41340
+4473bb53-Meadowbrook_T12__Budget_11.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/4473bb53-Meadowbrook_T12__Budget_11.2025.xlsx,62460
+4477490d-Arcola_Balance_Sheet_12.2024.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/4477490d-Arcola_Balance_Sheet_12.2024.xlsx,19582
+447c0034-Arcola_T12__Budget_vs_Actual_03.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/447c0034-Arcola_T12__Budget_vs_Actual_03.2025.xlsx,44584
+49561c3b-St_Elmo_T12__Budget_12.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/49561c3b-St_Elmo_T12__Budget_12.2025.xlsx,59307
+4a6680dd-St_Elmo_T12__Budget_06.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/4a6680dd-St_Elmo_T12__Budget_06.2026.xlsx,64196
+4e03cd69-Bement_T12__Budget_04.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/4e03cd69-Bement_T12__Budget_04.2026.xlsx,61132
+4fb0a54b-Tuscola_T12__Budget_06.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/4fb0a54b-Tuscola_T12__Budget_06.2026.xlsx,62543
+50dc3bee-09.30.25_Petersen_Financial_Statements_-_MTD_Only.xls,Curis,Petersen Group consolidated statement,data/raw/curis/50dc3bee-09.30.25_Petersen_Financial_Statements_-_MTD_Only.xls,100517
+5138292f-Lincoln_Income_Statement__by_Facility_Preliminary_6.30.25.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/5138292f-Lincoln_Income_Statement__by_Facility_Preliminary_6.30.25.xlsx,15175
+553f9ca3-Farmer_City_T12__Budget_12.2024.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/553f9ca3-Farmer_City_T12__Budget_12.2024.xlsx,36152
+55624929-Lincoln_Income_Statement__by_Facility_Preliminary_3.31.25.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/55624929-Lincoln_Income_Statement__by_Facility_Preliminary_3.31.25.xlsx,18726
+59ac6577-Bridgeport_T12__Budget_08.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/59ac6577-Bridgeport_T12__Budget_08.2025.xlsx,48858
+5db8086f-2025_YE_Mendota_Financial_Statements.xlsx,Allure,Income Statement Trending Detail - GGM,data/raw/allure/5db8086f-2025_YE_Mendota_Financial_Statements.xlsx,130102
+5e282088-Arcola_T12__Budget_01.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/5e282088-Arcola_T12__Budget_01.2026.xlsx,62899
+608af48f-01.31.25_Financial_Statements_-_MTD_Only.xlsx,Curis,Petersen Group consolidated statement,data/raw/curis/608af48f-01.31.25_Financial_Statements_-_MTD_Only.xlsx,94339
+614cc5eb-Arcola_T12__Budget_12.2024.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/614cc5eb-Arcola_T12__Budget_12.2024.xlsx,36293
+618a5c44-Peterson__Breese_Mar6_PL.xlsx,Evercare,Petersen 4-Pack by-tab workbook (Evercare),data/raw/evercare/618a5c44-Peterson__Breese_Mar6_PL.xlsx,47435
+62bd6ced-Bement_T12__Budget_12.2024.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/62bd6ced-Bement_T12__Budget_12.2024.xlsx,34623
+62ebb0a0-Farmer_City_T12__Budget_07.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/62ebb0a0-Farmer_City_T12__Budget_07.2025.xlsx,54537
+633bea35-04.30.25_Petersen_Financial_Statements_-_MTD_Only.xlsx,Curis,Petersen Group consolidated statement,data/raw/curis/633bea35-04.30.25_Petersen_Financial_Statements_-_MTD_Only.xlsx,93251
+63dbeb9e-Bement_T12__Budget_05.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/63dbeb9e-Bement_T12__Budget_05.2026.xlsx,61742
+646d0758-Lincoln_Income_Statement__by_Facility_Preliminary_12.31.24.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/646d0758-Lincoln_Income_Statement__by_Facility_Preliminary_12.31.24.xlsx,17384
+6ac35b80-St_Elmo_T12__Budget_04.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/6ac35b80-St_Elmo_T12__Budget_04.2026.xlsx,63513
+6c9b22b9-St_Elmo_T12__Budget_11.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/6c9b22b9-St_Elmo_T12__Budget_11.2025.xlsx,55564
+6cf83890-Sandwich_PL_063026.xlsm,Lineage,Facility PL export (.xlsm),data/raw/lineage/6cf83890-Sandwich_PL_063026.xlsm,335280
+6e9934a7-Walnut_PL_T12_Combined_2026-06.csv,Allure,Income Statement Trending Detail - GGM,data/raw/allure/6e9934a7-Walnut_PL_T12_Combined_2026-06.csv,21051
+6f06922d-08.31.25_Petersen_Financial_Statements_-_MTD_Only.xls,Curis,Petersen Group consolidated statement,data/raw/curis/6f06922d-08.31.25_Petersen_Financial_Statements_-_MTD_Only.xls,98279
+6f8ea696-Sandwich_PL_02282026.xlsm,Lineage,Facility PL export (.xlsm),data/raw/lineage/6f8ea696-Sandwich_PL_02282026.xlsm,341897
+6fc82c92-Bridgeport_T12__Budget_11.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/6fc82c92-Bridgeport_T12__Budget_11.2025.xlsx,56968
+70353a22-Farmer_City_T12__Budget_10.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/70353a22-Farmer_City_T12__Budget_10.2025.xlsx,62832
+717b64b8-Lincoln_Income_Statement__by_Facility_Preliminary_10.31.25.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/717b64b8-Lincoln_Income_Statement__by_Facility_Preliminary_10.31.25.xlsx,15213
+72f6e703-Arcola_Balance_Sheet_01.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/72f6e703-Arcola_Balance_Sheet_01.2025.xlsx,20370
+7333936b-Bridgeport_T12__Budget_10.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/7333936b-Bridgeport_T12__Budget_10.2025.xlsx,54305
+73d552fd-Bement_T12__Budget_07.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/73d552fd-Bement_T12__Budget_07.2025.xlsx,53375
+75e2881b-Bement_T12__Budget_05.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/75e2881b-Bement_T12__Budget_05.2025.xlsx,49489
+77c97b9c-Tuscola_T12__Budget_04.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/77c97b9c-Tuscola_T12__Budget_04.2026.xlsx,62511
+7822cb42-Tuscola_T12__Budget_06.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/7822cb42-Tuscola_T12__Budget_06.2025.xlsx,53750
+79a0b362-Arcola_T12__Budget_09.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/79a0b362-Arcola_T12__Budget_09.2025.xlsx,60179
+7a17a160-Farmer_City_T12__Budget_vs_Actual_01.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/7a17a160-Farmer_City_T12__Budget_vs_Actual_01.2025.xlsx,39133
+7bf0643a-Bridgeport_T12__Budget_09.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/7bf0643a-Bridgeport_T12__Budget_09.2025.xlsx,51087
+7cf4812c-Arcola_T12__Budget_05.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/7cf4812c-Arcola_T12__Budget_05.2025.xlsx,49769
+7f18e69b-Meadowbrook_T12__Budget_02.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/7f18e69b-Meadowbrook_T12__Budget_02.2026.xlsx,62068
+7f9dca9c-Peru_PL_2026-06.csv,Allure,Income Statement Trending Detail - GGM,data/raw/allure/7f9dca9c-Peru_PL_2026-06.csv,22276
+7ffac56d-Meadowbrook_T12__Budget_06.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/7ffac56d-Meadowbrook_T12__Budget_06.2026.xlsx,62276
+81b85db3-Tuscola_T12__Budget_02.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/81b85db3-Tuscola_T12__Budget_02.2026.xlsx,62898
+82183a94-Tuscola_T12__Budget_05.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/82183a94-Tuscola_T12__Budget_05.2026.xlsx,62189
+83e8ccc9-Lincoln_Income_Statement__by_Facility_Preliminary_5.31.25.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/83e8ccc9-Lincoln_Income_Statement__by_Facility_Preliminary_5.31.25.xlsx,15243
+85ba71cb-Bement_T12__Budget_03.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/85ba71cb-Bement_T12__Budget_03.2026.xlsx,61688
+8623d4e3-Meadowbrook_T12__Budget_05.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/8623d4e3-Meadowbrook_T12__Budget_05.2025.xlsx,49725
+86a6e155-Bement_T12__Budget_02.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/86a6e155-Bement_T12__Budget_02.2026.xlsx,60762
+87512f5b-Lincoln_Income_Statement__by_Facility_Preliminary_3.31.26.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/87512f5b-Lincoln_Income_Statement__by_Facility_Preliminary_3.31.26.xlsx,20458
+89724404-Farmer_City_T12__Budget_06.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/89724404-Farmer_City_T12__Budget_06.2025.xlsx,52675
+8cf578dc-03.31.26_Petersen_Financial_Statements_-_MTD_Only_NO_ADDBACKS.xls,Curis,Petersen Group consolidated statement,data/raw/curis/8cf578dc-03.31.26_Petersen_Financial_Statements_-_MTD_Only_NO_ADDBACKS.xls,92547
+8e8f1d0c-Bement_Balance_Sheet_12.2024.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/8e8f1d0c-Bement_Balance_Sheet_12.2024.xlsx,19730
+91c77d5a-Tuscola_T12__Budget_12.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/91c77d5a-Tuscola_T12__Budget_12.2025.xlsx,64381
+923f4342-Farmer_City_T12__Budget_01.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/923f4342-Farmer_City_T12__Budget_01.2026.xlsx,62999
+97190840-North_Aurora_PL_02282026.xlsm,Lineage,Facility PL export (.xlsm),data/raw/lineage/97190840-North_Aurora_PL_02282026.xlsm,339112
+984d91db-Meadowbrook_T12__Budget_12.2024.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/984d91db-Meadowbrook_T12__Budget_12.2024.xlsx,51130
+9e006658-Lincoln_Income_Statement__by_Facility_Preliminary_1.31.25.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/9e006658-Lincoln_Income_Statement__by_Facility_Preliminary_1.31.25.xlsx,17125
+9e971604-Meadowbrook_T12__Budget_07.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/9e971604-Meadowbrook_T12__Budget_07.2025.xlsx,54475
+9f1108dc-Arcola_T12__Budget_06.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/9f1108dc-Arcola_T12__Budget_06.2025.xlsx,52697
+9fda5407-Arcola_T12__Budget_07.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/9fda5407-Arcola_T12__Budget_07.2025.xlsx,54851
+a07e136f-Bridgeport_T12__Budget_02.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/a07e136f-Bridgeport_T12__Budget_02.2026.xlsx,63899
+a14af177-North_Aurora_PL_063026.xlsm,Lineage,Facility PL export (.xlsm),data/raw/lineage/a14af177-North_Aurora_PL_063026.xlsm,331906
+a1805234-Peru_YTD_2026_PL.csv,Allure,Income Statement Trending Detail - GGM,data/raw/allure/a1805234-Peru_YTD_2026_PL.csv,13472
+a5856d9f-Meadowbrook_T12__Budget_01.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/a5856d9f-Meadowbrook_T12__Budget_01.2026.xlsx,61760
+a5a69934-Irving_Park_PL_063026.xlsm,Lineage,Facility PL export (.xlsm),data/raw/lineage/a5a69934-Irving_Park_PL_063026.xlsm,339486
+a6384ce1-Tuscola_T12__Budget_03.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/a6384ce1-Tuscola_T12__Budget_03.2026.xlsx,62770
+aa3a0eef-Tuscola_T12__Budget_01.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/aa3a0eef-Tuscola_T12__Budget_01.2026.xlsx,63070
+aaa8eebd-Bement_T12__Budget_06.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/aaa8eebd-Bement_T12__Budget_06.2026.xlsx,61920
+ad78ba48-Arcola_T12__Budget_08.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/ad78ba48-Arcola_T12__Budget_08.2025.xlsx,57750
+ae54e8be-05.31.25_Petersen_Financial_Statements_-_MTD_Only.xlsx,Curis,Petersen Group consolidated statement,data/raw/curis/ae54e8be-05.31.25_Petersen_Financial_Statements_-_MTD_Only.xlsx,97418
+af6550fe-Arcola_T12__Budget_12.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/af6550fe-Arcola_T12__Budget_12.2025.xlsx,62882
+afc1d507-Meadowbrook_T12__Budget_vs_Actual_04.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/afc1d507-Meadowbrook_T12__Budget_vs_Actual_04.2025.xlsx,47368
+b07881bb-01.31.26_Petersen_Financial_Statements_-_MTD_Only.xls,Curis,Petersen Group consolidated statement,data/raw/curis/b07881bb-01.31.26_Petersen_Financial_Statements_-_MTD_Only.xls,98392
+b599687f-Tuscola_T12__Budget_04.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/b599687f-Tuscola_T12__Budget_04.2025.xlsx,48174
+b6166c8a-Bridgeport_T12__Budget_01.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/b6166c8a-Bridgeport_T12__Budget_01.2026.xlsx,76992
+b7efd4f8-Bridgeport_T12__Budget_05.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/b7efd4f8-Bridgeport_T12__Budget_05.2026.xlsx,64812
+b8a471cd-Bement_Balance_Sheet_01.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/b8a471cd-Bement_Balance_Sheet_01.2025.xlsx,20192
+b8f390f3-Bement_T12__Budget_12.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/b8f390f3-Bement_T12__Budget_12.2025.xlsx,62232
+bbbaca62-Bement_T12__Budget_08.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/bbbaca62-Bement_T12__Budget_08.2025.xlsx,56047
+bbca834b-Farmer_City_T12__Budget_05.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/bbca834b-Farmer_City_T12__Budget_05.2026.xlsx,62657
+bc099c2c-Peterson___Feb26_PL.xlsx,Evercare,Petersen 4-Pack by-tab workbook (Evercare),data/raw/evercare/bc099c2c-Peterson___Feb26_PL.xlsx,55090
+bcf0b92c-Farmer_City_T12__Budget_06.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/bcf0b92c-Farmer_City_T12__Budget_06.2026.xlsx,62289
+bd1460d3-Meadowbrook_T12__Budget_05.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/bd1460d3-Meadowbrook_T12__Budget_05.2026.xlsx,61971
+bd18a89f-Bement_T12__Budget_09.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/bd18a89f-Bement_T12__Budget_09.2025.xlsx,58784
+bd22cd2a-St_Elmo_T12__Budget_02.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/bd22cd2a-St_Elmo_T12__Budget_02.2026.xlsx,62851
+c365c23a-Arcola_T12__Budget_11.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/c365c23a-Arcola_T12__Budget_11.2025.xlsx,62176
+c3b7f791-Farmer_City_T12__Budget_02.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/c3b7f791-Farmer_City_T12__Budget_02.2026.xlsx,81800
+c40cc74a-Bement_T12__Budget_04.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/c40cc74a-Bement_T12__Budget_04.2025.xlsx,46529
+c5093859-Arcola_T12__Budget_06.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/c5093859-Arcola_T12__Budget_06.2026.xlsx,62445
+c73daa8d-Farmer_City_T12__Budget_04.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/c73daa8d-Farmer_City_T12__Budget_04.2026.xlsx,62747
+c88f8e4f-Bement_T12__Budget_vs_Actual_02.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/c88f8e4f-Bement_T12__Budget_vs_Actual_02.2025.xlsx,41828
+cc19335c-Lincoln_Income_Statement__by_Facility_Preliminary_9.30.25.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/cc19335c-Lincoln_Income_Statement__by_Facility_Preliminary_9.30.25.xlsx,15288
+cc37344e-Farmer_City_T12__Budget_11.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/cc37344e-Farmer_City_T12__Budget_11.2025.xlsx,62259
+ccf3a8f9-Bement_T12__Budget_vs_Actual_03.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/ccf3a8f9-Bement_T12__Budget_vs_Actual_03.2025.xlsx,44373
+cdad6d8d-Tuscola_T12__Budget_11.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/cdad6d8d-Tuscola_T12__Budget_11.2025.xlsx,96565
+d07da98e-Meadowbrook_T12__Budget_09.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/d07da98e-Meadowbrook_T12__Budget_09.2025.xlsx,59872
+d0dce6cf-St_Elmo_T12__Budget_09.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/d0dce6cf-St_Elmo_T12__Budget_09.2025.xlsx,51551
+d23ea34b-Bridgeport_T12__Budget_06.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/d23ea34b-Bridgeport_T12__Budget_06.2026.xlsx,80616
+d39a696a-Tuscola_T12__Budget_vs_Actual_02.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/d39a696a-Tuscola_T12__Budget_vs_Actual_02.2025.xlsx,42412
+d57c37bc-St_Elmo_T12__Budget_08.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/d57c37bc-St_Elmo_T12__Budget_08.2025.xlsx,48712
+d9098781-11.30.25_Petersen_Financial_Statements_-_MTD_Only.xls,Curis,Petersen Group consolidated statement,data/raw/curis/d9098781-11.30.25_Petersen_Financial_Statements_-_MTD_Only.xls,99683
+d9328cf5-St_Elmo_T12__Budget_07.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/d9328cf5-St_Elmo_T12__Budget_07.2025.xlsx,62190
+da8e3a49-Meadowbrook_T12__Budget_04.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/da8e3a49-Meadowbrook_T12__Budget_04.2026.xlsx,62063
+dad0603f-Arcola_T12__Budget_04.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/dad0603f-Arcola_T12__Budget_04.2026.xlsx,62569
+dbaaf45e-Bement_T12__Budget_10.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/dbaaf45e-Bement_T12__Budget_10.2025.xlsx,60817
+dbea99b4-St_Elmo_T12__Budget_06.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/dbea99b4-St_Elmo_T12__Budget_06.2025.xlsx,44141
+dbeddd0a-Mendota_YTD_2026_PL.csv,Allure,Income Statement Trending Detail - GGM,data/raw/allure/dbeddd0a-Mendota_YTD_2026_PL.csv,13462
+dd616a49-Farmer_City_T12__Budget_09.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/dd616a49-Farmer_City_T12__Budget_09.2025.xlsx,60341
+e180960b-Tuscola_T12__Budget_vs_Actual_03.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/e180960b-Tuscola_T12__Budget_vs_Actual_03.2025.xlsx,45104
+e2f425a9-Peterson__Breese_April26_PL.xlsx,Evercare,Petersen 4-Pack by-tab workbook (Evercare),data/raw/evercare/e2f425a9-Peterson__Breese_April26_PL.xlsx,65002
+e3300a53-Tuscola_T12__Budget_10.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/e3300a53-Tuscola_T12__Budget_10.2025.xlsx,63849
+e3e0e548-Bridgeport_T12__Budget_05.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/e3e0e548-Bridgeport_T12__Budget_05.2025.xlsx,41726
+e52f7b46-Tuscola_T12__Budget_09.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/e52f7b46-Tuscola_T12__Budget_09.2025.xlsx,61659
+e7498a44-Meadowbrook_T12__Budget_10.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/e7498a44-Meadowbrook_T12__Budget_10.2025.xlsx,62003
+e7a154c8-04.30.26_Petersen_Financial_Statements_-_MTD_Only_NO_ADDBACKS.xls,Curis,Petersen Group consolidated statement,data/raw/curis/e7a154c8-04.30.26_Petersen_Financial_Statements_-_MTD_Only_NO_ADDBACKS.xls,91800
+e7cca985-05.31.26_Petersen_Financial_Statements_-_MTD_Only_NO_ADDBACKS.xls,Curis,Petersen Group consolidated statement,data/raw/curis/e7cca985-05.31.26_Petersen_Financial_Statements_-_MTD_Only_NO_ADDBACKS.xls,97337
+e7f66f80-Bridgeport_T12__Budget_12.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/e7f66f80-Bridgeport_T12__Budget_12.2025.xlsx,60187
+e82b4d82-03.31.25_Financial_Statements_-_MTD_Only.xlsx,Curis,Petersen Group consolidated statement,data/raw/curis/e82b4d82-03.31.25_Financial_Statements_-_MTD_Only.xlsx,90817
+e8e3aeb3-Arcola_T12__Budget_04.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/e8e3aeb3-Arcola_T12__Budget_04.2025.xlsx,47362
+ec87b4f4-Arcola_T12__Budget_02.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/ec87b4f4-Arcola_T12__Budget_02.2026.xlsx,62608
+edf520d6-Lincoln_Income_Statement__by_Facility_Preliminary_7.31.25.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/edf520d6-Lincoln_Income_Statement__by_Facility_Preliminary_7.31.25.xlsx,15337
+ef055a6a-12.31.25_Petersen_Financial_Statements_-_MTD_Only.xls,Curis,Petersen Group consolidated statement,data/raw/curis/ef055a6a-12.31.25_Petersen_Financial_Statements_-_MTD_Only.xls,99507
+f276c7f2-Tuscola_T12__Budget_05.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/f276c7f2-Tuscola_T12__Budget_05.2025.xlsx,65982
+f2b36f77-St_Elmo_T12__Budget_03.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/f2b36f77-St_Elmo_T12__Budget_03.2026.xlsx,63506
+f2f6b6c8-Lincoln_Income_Statement__by_Facility_Preliminary_8.31.25.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/f2f6b6c8-Lincoln_Income_Statement__by_Facility_Preliminary_8.31.25.xlsx,15173
+f3bd2882-Tuscola_T12__Budget_01.2026.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/f3bd2882-Tuscola_T12__Budget_01.2026.xlsx,63070
+f40689dc-Petersen_PL_May26.xlsx,Evercare,Petersen 4-Pack by-tab workbook (Evercare),data/raw/evercare/f40689dc-Petersen_PL_May26.xlsx,59367
+f57e5796-Farmer_City_T12__Budget_04.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/f57e5796-Farmer_City_T12__Budget_04.2025.xlsx,47097
+f786fe35-Meadowbrook_T12__Budget_vs_Actual_01.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/f786fe35-Meadowbrook_T12__Budget_vs_Actual_01.2025.xlsx,38914
+f9976939-Tuscola_T12__Budget_vs_Actual_01.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/f9976939-Tuscola_T12__Budget_vs_Actual_01.2025.xlsx,38415
+fa086f22-Bement_T12__Budget_11.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/fa086f22-Bement_T12__Budget_11.2025.xlsx,61621
+fa8f3156-02.28.25_Financial_Statements_-_MTD_Only.xlsx,Curis,Petersen Group consolidated statement,data/raw/curis/fa8f3156-02.28.25_Financial_Statements_-_MTD_Only.xlsx,93553
+faee6fe2-Arcola_T12__Budget_vs_Actual_02.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/faee6fe2-Arcola_T12__Budget_vs_Actual_02.2025.xlsx,42248
+fce47447-4_Pack_PL_12.25.xlsx,Evercare,Petersen 4-Pack by-tab workbook (Evercare),data/raw/evercare/fce47447-4_Pack_PL_12.25.xlsx,235982
+fd42188b-Lincoln_Income_Statement__by_Facility_Preliminary_2.28.26.xlsx,Lincoln,Multi-facility income statement by facility,data/raw/lincoln/fd42188b-Lincoln_Income_Statement__by_Facility_Preliminary_2.28.26.xlsx,15396
+fe2a8f46-Arcola_T12__Budget_10.2025.xlsx,Extendicare,"T12 Budget vs Actual / Balance Sheet, single facility",data/raw/extendicare/fe2a8f46-Arcola_T12__Budget_10.2025.xlsx,62032
