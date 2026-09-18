@@ -14,14 +14,20 @@ ability to pay rent. It replaces a prior Power BI report.
 
 ## 2. Operators and Source File Formats
 
-| Operator | Brands covered | Source format |
+| Operator | Brands covered (facility-listing `Manager` values) | Source format |
 |---|---|---|
-| **Curis** | Axiom, Arcadia, Goldwater, Avenues, Villas, Gardens | Consolidated multi-facility statements (one workbook, one column per facility, per facility-group e.g. "Petersen Group") |
+| **Curis** | Axiom, Arcadia, Arcadia - ALF, Goldwater (financial-name prefixes Avenues/Villas/Gardens fall under Arcadia / Arcadia - ALF) | Consolidated multi-facility statements (one workbook, one column per facility, per facility-group e.g. "Petersen Group") |
 | **Extendicare** | Extended Care, Haven | T12 Budget vs. Actual, single-facility files |
-| **Lincoln** | — | Multi-facility income statements + separate census files |
-| **Lineage** | — | QuickBooks Desktop T12 exports |
-| **Evercare** | — | Single-facility, trailing-12 tabs |
-| **Aliya** | — | YTD detailed hierarchical P&L, up to 5 levels of indentation |
+| **Lincoln** | Lincoln | Multi-facility income statements + separate census files |
+| **Lineage** | Lineage | QuickBooks Desktop T12 exports; also `<Facility>_PL_MMDDYYYY.xlsm` files (North Aurora, Sandwich, Irving Park, South Elgin, Ironwood) |
+| **Evercare** | Evercare | Single-facility, trailing-12 tabs |
+| **Aliya** | Aliya | YTD detailed hierarchical P&L, up to 5 levels of indentation |
+| **Allure** | Allure (facilities: Mendota, Peru, Sterling, Walnut) | "Income Statement Trending Detail - GGM" — wide sheet, one row per account, `<Month>_Actual $` / `<Month>_Actual $/Day` column pairs per month plus a `TOTALS` column, 3-space-indent leaf accounts under department headers, `TOTAL <dept>` subtotal rows, a `Patient Days` section for census, `Net Income - (Loss)` bottom line. Discovered mid-project (not in the original 6); added here per user confirmation. Walnut has an added ILF (independent living) component. |
+
+**Excluded from load**: Stern and COR HC Partners LLC are tenants/managers
+with no financials to load — present in the facility master for
+traceability (`dim_facility.is_active = 0`), but their absence from a load
+batch is not an exception.
 
 Note: "Petersen" is not an operator — it is a Curis **facility group** name
 (header: `Curis Services` / `Facility group: Petersen Group`), covering a
@@ -29,10 +35,22 @@ set of Axiom-brand facilities (Axiom Gardens Flora, Axiom Flora, Axiom
 Gardens Mount Vernon, Axiom West Frankfort, Axiom Mount Vernon, Axiom
 Rosiclare, Axiom Harrisburg, etc.). Files named `*Petersen*` and
 `*Peterson*` (both spellings appear in source filenames) are Curis-operator
-raw files.
+raw files. "Petersen SNF" is also the landlord entity name for most of the
+portfolio in the facility master (`Landlord Name` column) — do not confuse
+the landlord label with the operator/manager.
 
 Stern is no longer a tenant. COR HC Partners LLC has no financials to load
 (do not treat its absence as a load failure).
+
+## 2a. Facility Master Data
+
+`data/reference/facility_listing.xlsx` (sheet `Dim_Facility`, 61 rows) is
+the source of truth for `dim_facility`: `FacilityKey`, `Manager` (brand,
+grouped into operators per the table above — trim whitespace, e.g. "Allure "
+vs "Allure"), `Landlord Name`, `Previous Name` (→ `dim_facility_alias`),
+`Financial Name` (→ `dim_facility.facility_name`, matches how the facility
+appears in financial statements), `New Name`, address/state/county,
+bed counts, `Facility ID`, `Licensee ID`, Medicare certification number.
 
 ## 3. Core Taxonomy Rules
 
