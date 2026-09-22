@@ -694,8 +694,14 @@ function drawSparkline(svg, facilityIds, periods){
 }
 
 populateLandlordSelect();
+const initialScope = refreshEntities();
+buildEntityChips(initialScope);
 populateMonthPickers();
-refreshAndRender();
+// Default to T12 (anchored on the default entity selection, not the
+// full portfolio history) so a comparison reads as a run rate at a
+// glance rather than an unlabeled multi-year cumulative total.
+setTrailingRange(12);
+render();
 </script>
 """
 
