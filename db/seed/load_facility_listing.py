@@ -53,6 +53,21 @@ def main() -> int:
     cur = conn.cursor()
 
     operator_ids: dict[str, int] = {}
+    landlord_ids: dict[str, int] = {}
+
+    def get_landlord_id(landlord_name: str) -> int:
+        landlord_name = landlord_name.strip()
+        if landlord_name in landlord_ids:
+            return landlord_ids[landlord_name]
+        cur.execute(
+            "INSERT INTO dim_landlord (landlord_name) VALUES (?) "
+            "ON CONFLICT(landlord_name) DO UPDATE SET landlord_name = excluded.landlord_name",
+            (landlord_name,),
+        )
+        cur.execute("SELECT landlord_id FROM dim_landlord WHERE landlord_name = ?", (landlord_name,))
+        lid = cur.fetchone()[0]
+        landlord_ids[landlord_name] = lid
+        return lid
 
     def get_operator_id(operator_name: str, is_active: int) -> int:
         if operator_name in operator_ids:
@@ -125,18 +140,21 @@ def main() -> int:
             notes_parts.append(f"Type={facility_type}")
         notes = "; ".join(notes_parts)
 
+        landlord_id = get_landlord_id(landlord_name) if landlord_name and landlord_name.strip() else None
+
         cur.execute(
             """
             INSERT INTO dim_facility
-                (operator_id, facility_name, brand, facility_group, state, is_active, notes)
-            VALUES (?, ?, ?, NULL, ?, ?, ?)
+                (operator_id, facility_name, brand, facility_group, state, is_active, notes, landlord_id)
+            VALUES (?, ?, ?, NULL, ?, ?, ?, ?)
             ON CONFLICT(operator_id, facility_name) DO UPDATE SET
                 brand = excluded.brand,
                 state = excluded.state,
                 is_active = excluded.is_active,
-                notes = excluded.notes
+                notes = excluded.notes,
+                landlord_id = excluded.landlord_id
             """,
-            (operator_id, facility_name, brand, (state or "").strip() or None, is_active, notes),
+            (operator_id, facility_name, brand, (state or "").strip() or None, is_active, notes, landlord_id),
         )
         cur.execute(
             "SELECT facility_id FROM dim_facility WHERE operator_id = ? AND facility_name = ?",
