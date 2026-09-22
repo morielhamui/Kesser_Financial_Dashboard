@@ -172,6 +172,41 @@ Apply consistently to **both** census and revenue sides.
   legitimately match (verified: Collinsville, April 2026 — both
   $214.80/day). That is real data, not a mapping artifact.
 
+### Revenue PPD by payor must divide by that SAME payor's census days
+
+Confirmed live in the dashboard's Revenue PPD by Operator page
+(2026-09-22). This section already specified the rule above ("must be live
+from day one") but the dashboard's first build divided every payor's
+revenue by the facility's TOTAL census days instead — diluting Medicare
+(a small, high-rate slice of the census) into a number many times too low,
+while Medicaid (the majority of most census pools) looked deceptively
+close to correct. Fixed by exporting resident-days broken out **by
+payor**, not just as a facility total, and dividing each payor's revenue
+by that same payor's own days. Verified after the fix: Arcadia's blended
+Medicare PPD landed at $595–730/day and Medicaid at $200–256/day, both in
+line with real SNF rates, vs. the pre-fix numbers that were off by roughly
+the ratio of Medicare's census share to the facility's total census.
+
+This requires a canonical payor vocabulary shared by **both** sides,
+since census and revenue often spell the same payor differently (e.g.
+revenue's "Insurance/Commerical" typo vs. census's "Commercial
+Insurance", or "Private Pay" vs. "Private"). The alias table above
+(`PAYOR_ALIASES` in `parsers/common.py`) only covers the operators the
+master mapping's census grouping reaches; Aliya (no census data at all,
+so moot) and Allure (whose parser sets each payor as its own top-level
+category rather than a `Resident Income` detail) needed the alias table
+extended for their specific spelling variants — see `PAYOR_CANON` in the
+PPD export. A handful of revenue lines have no matching census payor to
+divide against at all (Allure's combined "Medicare / Managed Care B"
+category, small lump-sum lines like "Incentive Payments") — these fold
+into an "Other" bucket that necessarily falls back to blended (total)
+census days, which is disclosed on the page rather than silently
+presented as payor-matched.
+
+Department-level Expense PPD is unaffected by any of this: departments
+serve the whole census regardless of payor mix, so dividing by total
+census days there is already correct.
+
 ## 6. Validation Rule (gate before anything is "loaded")
 
 After every load:
