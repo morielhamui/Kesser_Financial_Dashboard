@@ -70,6 +70,7 @@ canon_rows = conn.execute("""
     SELECT facility_id, period_date, source_file FROM ranked WHERE rn = 1
 """).fetchall()
 canon = set((r["facility_id"], r["period_date"], r["source_file"]) for r in canon_rows)
+reported_source_files = set(r[0] for r in conn.execute("SELECT DISTINCT source_file FROM fact_reported_net_income"))
 
 # --- facilities ---
 facilities = {}
@@ -94,11 +95,18 @@ for row in conn.execute("""
 # facility/period (the same de-dup already used for the financials), those
 # months get summed 12-13x over, wildly inflating resident-days and
 # understating every PPD figure that depends on it.
+#
+# Exception: Lincoln/Lineage's census comes from a standalone historical
+# backfill file (db/seed/load_lincoln_lineage_census.py) with no
+# corresponding P&L workbook, so it never appears in fact_reported_net_income
+# and can never match `canon` -- there's also no overlapping T12 export to
+# dedupe against, so a source_file with zero rows in fact_reported_net_income
+# at all is let through unfiltered rather than being silently dropped.
 census_days = {}          # (facility_id, period) -> total days, all payors
 census_days_by_payor = {} # (facility_id, period) -> {canonical_payor: days}
 for row in conn.execute("SELECT facility_id, period_date, source_file, payor, SUM(resident_days) d FROM fact_census GROUP BY facility_id, period_date, source_file, payor"):
     key = (row["facility_id"], row["period_date"], row["source_file"])
-    if key not in canon:
+    if row["source_file"] in reported_source_files and key not in canon:
         continue
     fp = (row["facility_id"], row["period_date"])
     d = row["d"] or 0.0

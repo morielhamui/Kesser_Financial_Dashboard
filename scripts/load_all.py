@@ -42,6 +42,9 @@ def main():
     subprocess.run(
         [sys.executable, os.path.join(REPO_ROOT, "db", "seed", "add_extendicare_aliases.py")], check=True
     )
+    subprocess.run(
+        [sys.executable, os.path.join(REPO_ROOT, "db", "seed", "load_lincoln_lineage_census.py")], check=True
+    )
 
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA foreign_keys = ON;")

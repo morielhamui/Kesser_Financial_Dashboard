@@ -231,7 +231,7 @@ tbody td.clickable:hover{box-shadow:inset 0 0 0 1px var(--accent);}
     </div>
   </div>
 
-  <p class="footnote">PPD figures are $ per resident day, computed as total dollars &divide; total resident days for the group shown (never an average of monthly PPDs), so multi-month columns stay mathematically consistent. The rightmost "Avg" column is weighted the same way across the selected months. Expense department rows divide by the facility's total census, since departments serve every resident regardless of payor &mdash; but each Revenue payor row (Medicaid, Medicare, etc.) divides by that SAME payor's own census days, not total census, so a Medicare rate isn't diluted by the facility's Medicaid/Private residents. "Other" (Revenue) covers the few payor lines with no matching census breakdown to divide against and falls back to total census days. GL amounts in the drill-down panel are the underlying dollars for that line, not PPD. Aliya, Lincoln, and Lineage show "no census data" &mdash; no census file has been loaded for any of their facilities yet (a known gap, tracked in PROJECT_RULES.md), so no PPD can be computed for them until one is provided. Allure's revenue-by-payor breakdown is withheld for the same reason: census isn't yet complete across all of Allure's homes, so its blended (non-payor) Revenue PPD is shown, but not a payor split.</p>
+  <p class="footnote">PPD figures are $ per resident day, computed as total dollars &divide; total resident days for the group shown (never an average of monthly PPDs), so multi-month columns stay mathematically consistent. The rightmost "Avg" column is weighted the same way across the selected months. Expense department rows divide by the facility's total census, since departments serve every resident regardless of payor &mdash; but each Revenue payor row (Medicaid, Medicare, etc.) divides by that SAME payor's own census days, not total census, so a Medicare rate isn't diluted by the facility's Medicaid/Private residents. "Other" (Revenue) covers the few payor lines with no matching census breakdown to divide against and falls back to total census days. GL amounts in the drill-down panel are the underlying dollars for that line, not PPD. Aliya shows "no census data" &mdash; no census file has been loaded for its facilities yet (a known gap, tracked in PROJECT_RULES.md), so no PPD can be computed for it until one is provided. Allure of Walnut's own source file had its per-payor "Patient Days" corrupted (copy-pasted from its Revenue $ rows); the corrupted payor rows are dropped and folded into "Other" using the correct total instead &mdash; see PROJECT_RULES.md section 8.</p>
 </div>
 
 <div class="drill-backdrop" id="drillBackdrop" hidden>
@@ -548,25 +548,6 @@ function renderTable(section, headId, bodyId, expandedSet){
     avgTd.onclick = () => openDrill(section, mgr, null, "TOTAL", periods);
     tr.appendChild(avgTd);
     body.appendChild(tr);
-
-    // Allure's census isn't ready yet (only 2 of its 4 facilities have any
-    // census on file, and one of those needed a source-data correction --
-    // see PROJECT_RULES.md), so the revenue-by-payor breakdown -- which
-    // depends on payor-matched census -- is withheld for Allure until real
-    // census files are in for all of its homes. The blended manager-level
-    // Revenue PPD row above (driven by total census, not a payor split)
-    // is unaffected.
-    if (section === "revenue" && mgr === "Allure"){
-      const noteRow = document.createElement("tr");
-      noteRow.className = "sub" + (expandedSet.has(mgr) ? " show" : "");
-      const noteTd = document.createElement("td");
-      noteTd.className = "linecell"; noteTd.colSpan = periods.length + 2;
-      noteTd.textContent = "Payor breakdown withheld: census not yet complete for Allure's homes.";
-      noteTd.style.color = "var(--muted)"; noteTd.style.fontStyle = "italic"; noteTd.style.fontSize = "12px";
-      noteRow.appendChild(noteTd);
-      body.appendChild(noteRow);
-      return;
-    }
 
     subs.forEach(sub => {
       const subPicker = pickerFor(section, sub);

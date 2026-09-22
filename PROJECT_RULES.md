@@ -337,7 +337,34 @@ NOI                              = Earnings + Other Income/Expense
   matching that payor's revenue series) and drops the corrupted payor
   rows, folding the undistributed remainder of "TOTAL Patient Days" into a
   `payor='Other'` row so blended PPD still reconciles to the true total
-  without pretending we know which payor those days belong to.
+  without pretending we know which payor those days belong to. The guard
+  runs per source_file, so it caught the exact real-world shape of the
+  bug: the 2025-annual workbook's Jan–Dec payor breakdown was corrupted in
+  full and dropped entirely (all of it, not just the initially-sampled
+  Q1 months), while a separately-loaded overlapping rolling-T12 file
+  covering Jul 2025–Jun 2026 had genuinely correct data for that payor and
+  was kept as-is — additive-by-source_file inserts meant the two didn't
+  collide, and the guard's own dropped-vs-kept split lined up exactly with
+  which file actually had the good data once double-checked in full.
+- **Allure's revenue-by-payor breakdown was withheld, then restored.**
+  Initially withheld across all of Allure pending "real" census — an
+  overly broad reaction to the Walnut discovery above, made before the
+  corruption guard existed. Once the guard was built and Mendota/Peru's
+  payor-level census was independently confirmed accurate (HFS validation
+  within 0.1–0.8%, see below), the withholding no longer served a
+  purpose and was reverted (2026-09-22). **Lesson: prefer fixing a
+  specific found defect over broadly withholding a whole operator's
+  output on suspicion — once the defect is actually fixed and verified,
+  revert the withholding rather than leaving it as permanent caution.**
+- **Standalone census-only files bypass the canonical-source-file dedup.**
+  The Lincoln/Lineage census backfill (see §10a) has no corresponding P&L
+  workbook, so its source_file never appears in `fact_reported_net_income`
+  and can never match the canonical-source set built from it (see §7's
+  `pick_canonical_source`) — every dashboard export that reads
+  `fact_census` treats a source_file with zero rows in
+  `fact_reported_net_income` at all as exempt from that filter (nothing to
+  dedupe against, since there's no overlapping file to collide with),
+  rather than silently dropping every row from a standalone census file.
 
 ### Verifying calculated Medicaid PPD against Illinois HFS's published rates
 
@@ -448,11 +475,20 @@ validate 100% (1,856 facility-periods, 0 failures) as of this writing.
 
 - **Aliya**: no raw files for Glenwood/Palatine's sibling facilities —
   only 2 of Aliya's facilities have any data at all.
-- **Lincoln**: no separate census file was ever provided, despite the
-  spec calling for one (income statement + separate census files).
-  Census is not loaded for Lincoln.
+- **Lincoln**: census gap filled 2026-09-22 via `Lincoln_final_census.xlsx`
+  (an interim, manually-consolidated Facility/Payor/Date/Days export
+  covering Jan 2025–Apr 2026, loaded by
+  `db/seed/load_lincoln_lineage_census.py`) — not Lincoln's native
+  monthly format, and not a recurring parser yet. The user has said real
+  raw files will follow so a proper parser can be built for ongoing
+  monthly loads; until then, re-running that script is how a new
+  consolidated export gets loaded. Loaded totals were cross-checked
+  against the file's own pivot-table grand total (166,244 days) and
+  matched exactly.
 - **Lineage**: Ironwood (a 5th Lineage facility per the facility master)
-  has zero raw files.
+  has zero raw files. The other 4 facilities' census gap was similarly
+  filled via `Lineage_final_census.xlsx` (same loader, same interim
+  format, Jan 2025–Apr 2026).
 - **Evercare**: Edwardsville and Evercare University (2 of Evercare's 7
   facilities per the facility master) have zero raw files. Also, the
   Breese tab in one specific file (`fce47447-4_Pack_PL_12.25.xlsx`) is
