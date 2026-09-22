@@ -59,13 +59,20 @@ in place rather than creating a new one.
   fixed 10-13% sensitivity table. Package groups with no purchase price
   on file are listed, not hidden, so a gap in coverage stays visible.
 - **T12 by Facility** (`export_t12_facility.py` / `build_t12_facility.py`)
-  -- the same waterfall as the T12 P&L page, but for one facility at a
-  time (dropdown + prev/next navigation), with every line -- not just
-  Operating Expense -- expandable down to its individual GL accounts.
-  Uses the full, unfiltered GL detail (~69,000 rows portfolio-wide, all
-  statement types), indexed per facility client-side on facility change
-  so repeated expands stay fast (all under ~200ms in testing) rather
-  than re-scanning the full dataset on every click.
+  -- a benchmarking view: pick a landlord to scope the field, choose
+  whether to compare by manager or by individual facility, then select
+  which ones to line up side by side as columns (e.g. every manager
+  under one landlord, or a hand-picked set of facilities across the
+  whole portfolio). Waterfall line items are rows, summed over the
+  selected month range (T3/T12 quick ranges, anchored on the current
+  selection's own latest reported month); the best/worst performer per
+  row is tinted so relative performance reads at a glance. Every line
+  -- Operating Revenue, each Operating Expense department, G&amp;A, Real
+  Estate Tax, Capital Expenses, Management Fees, Other Income/Expense
+  -- opens a click-to-drill modal down to its individual GL accounts,
+  scanning the full ~69,000-row portfolio-wide GL export on demand
+  rather than pre-indexing it, since a drill only opens on click, not
+  on every cell render.
 
 Design system (palette, type pairing, filter/drill-down interaction
 patterns) is shared across pages for visual consistency; see the inline
