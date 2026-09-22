@@ -124,6 +124,14 @@ tr.sub.show{display:table-row;}
 }
 .expand-btn.open{transform:rotate(90deg);}
 
+.toggle-group{display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden;}
+.toggle-btn{
+  font-family:inherit; font-size:12.5px; font-weight:600; color:var(--ink-soft);
+  background:var(--surface-2); border:none; padding:6px 13px; cursor:pointer;
+}
+.toggle-btn + .toggle-btn{border-left:1px solid var(--border);}
+.toggle-btn.active{background:var(--accent); color:var(--surface);}
+
 tbody td.clickable{cursor:pointer;}
 tbody td.clickable:hover{box-shadow:inset 0 0 0 1px var(--accent);}
 
@@ -196,13 +204,20 @@ tbody td.clickable:hover{box-shadow:inset 0 0 0 1px var(--accent);}
         <button class="chip" id="t12Btn" type="button">T12</button>
       </div>
     </div>
-    <p class="filter-hint">Click a chip to select it on its own. Ctrl/Cmd-click to add it to the current selection. Click any number below to see the facilities behind it, then click a facility to drill into its GL accounts.</p>
+    <div class="filter-row">
+      <span class="filter-label">View</span>
+      <span class="toggle-group" role="group" aria-label="View mode">
+        <button class="toggle-btn active" id="viewPpdBtn" type="button">Per Resident Day</button>
+        <button class="toggle-btn" id="viewTotalBtn" type="button">Total $</button>
+      </span>
+    </div>
+    <p class="filter-hint">Click a chip to select it on its own. Ctrl/Cmd-click to add it to the current selection. Click any number below to see the facilities behind it, then click a facility to drill into its GL accounts. "Total $" doesn't need a census day count, so it's the baseline to compare an operator like Aliya (no census file loaded yet) against the rest on equal footing.</p>
   </div>
 
   <div class="section">
     <div class="section-head">
       <h2>Expense PPD by Operator</h2>
-      <span class="section-note">Operating expense (excludes G&amp;A and Management Fees) &divide; total resident days</span>
+      <span class="section-note" id="expenseNote">Operating expense (excludes G&amp;A and Management Fees) &divide; total resident days</span>
     </div>
     <div class="card-grid" id="expenseCards"></div>
     <div class="table-card">
@@ -218,7 +233,7 @@ tbody td.clickable:hover{box-shadow:inset 0 0 0 1px var(--accent);}
   <div class="section">
     <div class="section-head">
       <h2>Revenue PPD by Operator</h2>
-      <span class="section-note">Resident income &divide; total resident days, by payor</span>
+      <span class="section-note" id="revenueNote">Resident income &divide; total resident days, by payor</span>
     </div>
     <div class="card-grid" id="revenueCards"></div>
     <div class="table-card">
@@ -271,6 +286,7 @@ let rangeFrom = PERIODS_ALL[0];
 let rangeTo = PERIODS_ALL[PERIODS_ALL.length - 1];
 let expandedExpense = new Set();  // manager names currently expanded
 let expandedRevenue = new Set();
+let viewMode = "ppd";  // "ppd" | "total" -- see metricValue/fmtMetric
 
 function fmtMonth(period){
   const [y,m] = period.split("-");
@@ -284,11 +300,45 @@ function fmtPPD(v){
   return v < 0 ? "(" + str + ")" : str;
 }
 function fmtDollarK(v){
+  if (v === null || v === undefined) return "–";
   const k = v/1000;
   const abs = Math.abs(k);
   const str = abs.toLocaleString(undefined,{maximumFractionDigits:1, minimumFractionDigits:1});
   return v < 0 ? "(" + str + "K)" : "$" + str + "K";
 }
+
+// Total $ needs no census day count at all, so it's the one baseline that
+// still works for an operator like Aliya (no census file loaded yet) --
+// PPD falls back to "–" for it, Total $ shows the real dollars.
+function metricValue(facIds, periods, picker, daysPicker){
+  const {dollars, ppd} = sumForFacilities(facIds, periods, picker, daysPicker);
+  if (viewMode === "total"){
+    const anyRow = facIds.some(fid => periods.some(p => !!ROW_BY_KEY[fid + "|" + p]));
+    return anyRow ? dollars : null;
+  }
+  return ppd;
+}
+function fmtMetric(v){
+  return viewMode === "total" ? fmtDollarK(v) : fmtPPD(v);
+}
+function setViewMode(mode){
+  if (mode === viewMode) return;
+  viewMode = mode;
+  document.getElementById("viewPpdBtn").classList.toggle("active", mode === "ppd");
+  document.getElementById("viewTotalBtn").classList.toggle("active", mode === "total");
+  updateSectionNotes();
+  renderAll();
+}
+function updateSectionNotes(){
+  document.getElementById("expenseNote").textContent = viewMode === "total"
+    ? "Total operating expense (excludes G&A and Management Fees), summed for the selected months"
+    : "Operating expense (excludes G&A and Management Fees) ÷ total resident days";
+  document.getElementById("revenueNote").textContent = viewMode === "total"
+    ? "Total resident income, summed for the selected months, by payor"
+    : "Resident income ÷ total resident days, by payor";
+}
+document.getElementById("viewPpdBtn").onclick = () => setViewMode("ppd");
+document.getElementById("viewTotalBtn").onclick = () => setViewMode("total");
 
 function handleChipClick(selectedSet, value, evt){
   const multi = evt.ctrlKey || evt.metaKey;
@@ -425,7 +475,7 @@ function renderCards(section, containerId){
   const picker = pickerFor(section, null);
   managers.forEach(mgr => {
     const facIds = facilitiesForManager(mgr);
-    const series = periods.map(p => sumForFacilities(facIds, [p], picker).ppd);
+    const series = periods.map(p => metricValue(facIds, [p], picker));
     const hasAnyData = series.some(v => v !== null);
     // Each card shows ITS OWN latest reported month, not just the last
     // column in the shared grid -- under "All", the grid's last column is
@@ -445,14 +495,14 @@ function renderCards(section, containerId){
     const value = document.createElement("div");
     if (!hasAnyData){
       value.className = "op-value no-data";
-      value.textContent = "No census data";
+      value.textContent = viewMode === "total" ? "No data" : "No census data";
       card.appendChild(name);
       card.appendChild(value);
       container.appendChild(card);
       return;
     }
     value.className = "op-value";
-    value.textContent = latest === null ? "–" : fmtPPD(latest);
+    value.textContent = latest === null ? "–" : fmtMetric(latest);
     const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svg.setAttribute("class", "op-spark"); svg.setAttribute("viewBox", "0 0 160 28"); svg.setAttribute("preserveAspectRatio", "none");
     drawSpark(svg, series);
@@ -520,7 +570,10 @@ function renderTable(section, headId, bodyId, expandedSet){
   managers.forEach(mgr => {
     const facIds = facilitiesForManager(mgr);
     const picker0 = pickerFor(section, null);
-    const hasCensus = periods.some(p => sumForFacilities(facIds, [p], picker0).days > 0);
+    // Total $ needs no census at all, so the "no census data" badge only
+    // applies in PPD mode -- Total $ is exactly the view that still works
+    // for an operator with no census file loaded.
+    const hasCensus = viewMode === "total" ? true : periods.some(p => sumForFacilities(facIds, [p], picker0).days > 0);
 
     const tr = document.createElement("tr"); tr.className = "manager-row";
     const labelTd = document.createElement("td"); labelTd.className = "linecell";
@@ -538,13 +591,13 @@ function renderTable(section, headId, bodyId, expandedSet){
 
     const picker = pickerFor(section, null);
     periods.forEach(p => {
-      const {ppd} = sumForFacilities(facIds, [p], picker);
-      const td = document.createElement("td"); td.textContent = fmtPPD(ppd); td.classList.add("clickable");
+      const v = metricValue(facIds, [p], picker);
+      const td = document.createElement("td"); td.textContent = fmtMetric(v); td.classList.add("clickable");
       td.onclick = () => openDrill(section, mgr, null, p);
       tr.appendChild(td);
     });
-    const {ppd: avgPpd} = sumForFacilities(facIds, periods, picker);
-    const avgTd = document.createElement("td"); avgTd.textContent = fmtPPD(avgPpd); avgTd.classList.add("clickable");
+    const avgV = metricValue(facIds, periods, picker);
+    const avgTd = document.createElement("td"); avgTd.textContent = fmtMetric(avgV); avgTd.classList.add("clickable");
     avgTd.onclick = () => openDrill(section, mgr, null, "TOTAL", periods);
     tr.appendChild(avgTd);
     body.appendChild(tr);
@@ -559,13 +612,13 @@ function renderTable(section, headId, bodyId, expandedSet){
       const stl = document.createElement("td"); stl.className = "linecell"; stl.textContent = sub;
       str.appendChild(stl);
       periods.forEach(p => {
-        const {ppd} = sumForFacilities(facIds, [p], subPicker, subDays);
-        const td = document.createElement("td"); td.textContent = fmtPPD(ppd); td.classList.add("clickable");
+        const v = metricValue(facIds, [p], subPicker, subDays);
+        const td = document.createElement("td"); td.textContent = fmtMetric(v); td.classList.add("clickable");
         td.onclick = () => openDrill(section, mgr, sub, p);
         str.appendChild(td);
       });
-      const {ppd: avgSubPpd} = sumForFacilities(facIds, periods, subPicker, subDays);
-      const avgTd2 = document.createElement("td"); avgTd2.textContent = fmtPPD(avgSubPpd); avgTd2.classList.add("clickable");
+      const avgSubV = metricValue(facIds, periods, subPicker, subDays);
+      const avgTd2 = document.createElement("td"); avgTd2.textContent = fmtMetric(avgSubV); avgTd2.classList.add("clickable");
       avgTd2.onclick = () => openDrill(section, mgr, sub, "TOTAL", periods);
       str.appendChild(avgTd2);
       body.appendChild(str);

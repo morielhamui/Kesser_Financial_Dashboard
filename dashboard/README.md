@@ -34,12 +34,17 @@ in place rather than creating a new one.
   detail. See PROJECT_RULES.md §7 for the waterfall formulas.
 - **Revenue & Expense PPD** (`export_ppd.py` / `build_ppd.py`) -- $ per
   resident day by operator, department (Expense) and payor (Revenue)
-  breakdowns, GL-account-level drill-down. The payor-matched census
-  methodology (dividing each payor's revenue by that SAME payor's own
-  census days, not the facility total) is documented in PROJECT_RULES.md
-  §5 and independently validated against Illinois HFS's published
-  Medicaid rates (see §8/`scripts/compare_hfs_medicaid_rates.py`) --
-  98.2% of comparable facility-quarters land within +/-10%.
+  breakdowns, GL-account-level drill-down. A "Per Resident Day / Total $"
+  toggle switches every card, row, and drill-down between the two --
+  Total $ needs no census day count at all, so it's the one baseline
+  that still works for an operator with no census file loaded (Aliya),
+  putting it on equal footing with the rest of the portfolio. The
+  payor-matched census methodology (dividing each payor's revenue by
+  that SAME payor's own census days, not the facility total) is
+  documented in PROJECT_RULES.md §5 and independently validated against
+  Illinois HFS's published Medicaid rates (see
+  §8/`scripts/compare_hfs_medicaid_rates.py`) -- 98.2% of comparable
+  facility-quarters land within +/-10%.
 - **Census & Occupancy** (`export_census.py` / `build_census.py`) --
   resident mix by payor (donut snapshot + 100%-stacked trend, using the
   dataviz skill's validated 8-hue categorical palette), occupancy %
