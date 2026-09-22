@@ -45,15 +45,21 @@ for row in conn.execute("SELECT landlord_id, brand, purchase_price FROM fact_pur
         "purchase_price": row["purchase_price"], "facility_ids": fac_ids,
     })
 
-# --- EBIDAR (and NOI) per facility/period, straight from the already-
-# validated metrics/waterfall layer -- no re-computation here. ---
+# --- EBIDARM (and NOI, operating revenue) per facility/period, straight
+# from the already-validated metrics/waterfall layer. EBIDARM is NOT the
+# covenant metric itself -- the covenant "EBIDAR" subtracts a normalized
+# management-fee add-back (5% of Operating Revenue, not the operator's
+# actual reported management fee) from EBIDARM; that arithmetic happens
+# client-side in build_covenant.py so operating_revenue needs to travel
+# alongside ebidarm here. See PROJECT_RULES.md section 9a.
 rows = []
-for row in conn.execute("SELECT facility_id, period_date, ebidarm, noi FROM fact_metrics_waterfall"):
+for row in conn.execute("SELECT facility_id, period_date, ebidarm, noi, operating_revenue FROM fact_metrics_waterfall"):
     if row["facility_id"] not in facilities:
         continue
     rows.append({
         "facility_id": row["facility_id"], "period": row["period_date"],
         "ebidarm": round(row["ebidarm"], 2), "noi": round(row["noi"], 2),
+        "operating_revenue": round(row["operating_revenue"], 2),
     })
 
 out = {

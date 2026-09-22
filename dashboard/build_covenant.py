@@ -132,7 +132,7 @@ tbody td.linecell .pkg-sub{display:block; font-size:11px; color:var(--muted); fo
   <div class="masthead">
     <span class="eyebrow">Kesser Financial Dashboard</span>
     <h1>Covenant &amp; EBIDAR</h1>
-    <p class="sub">EBIDAR coverage against purchase price, by landlord/manager package. Scoped to the packages we have a purchase price for &mdash; currently the Petersen SNF master lease (across all 8 of its manager brands) plus one individually-owned property. This is fundamentally an operator-side metric; we track it here because Curis is a related operator.</p>
+    <p class="sub">EBIDAR coverage against purchase price, by landlord/manager package. EBIDAR is EBIDARM less a normalized 5% of Operating Revenue management-fee add-back &mdash; not the operator's actual reported management fee &mdash; matching the underwriting model's own covenant definition. Scoped to the packages we have a purchase price for &mdash; currently the Petersen SNF master lease (across all 8 of its manager brands) plus one individually-owned property. This is fundamentally an operator-side metric; we track it here because Curis is a related operator.</p>
   </div>
 
   <div class="filters">
@@ -188,6 +188,11 @@ tbody td.linecell .pkg-sub{display:block; font-size:11px; color:var(--muted); fo
       <span class="stat-value" id="statSurplus">&ndash;</span>
       <span class="stat-foot" id="statSurplusFoot">at target rate</span>
     </div>
+    <div class="stat-card">
+      <span class="stat-label">Cap Rate Supportable</span>
+      <span class="stat-value" id="statSupportedLabel">&ndash;</span>
+      <span class="stat-foot">EBIDAR vs. required, at target rate</span>
+    </div>
   </div>
 
   <div class="card-grid" id="pkgCards"></div>
@@ -207,6 +212,7 @@ tbody td.linecell .pkg-sub{display:block; font-size:11px; color:var(--muted); fo
             <th>Cap Rate Supportable</th>
             <th id="requiredHeadCell">Required EBIDAR</th>
             <th>Surplus / (Shortfall)</th>
+            <th>Covenant Status</th>
           </tr></thead>
           <tbody id="pkgBody"></tbody>
         </table>
@@ -229,7 +235,7 @@ tbody td.linecell .pkg-sub{display:block; font-size:11px; color:var(--muted); fo
     </div>
   </div>
 
-  <p class="footnote">Purchase prices are package-level, not per-facility &mdash; e.g. all 7 Arcadia facilities under the Petersen SNF master lease were bought as one package with one price, so EBIDAR for every facility in a package is summed before comparing to that package's single price. EBIDAR for the selected months is annualized (&times; 12 &divide; number of months with data) so an interim period compares fairly against the one-time purchase price; selecting T12 needs no scaling. Only the Petersen SNF packages (all 8 manager brands) and 1155 N First St/Evercare have a purchase price on file; the ~11 other individually-owned properties show "no purchase price data" rather than a guessed figure. See PROJECT_RULES.md section 9a for the landlord/master-lease structure this reflects.</p>
+  <p class="footnote">EBIDAR = EBIDARM &minus; 5% of Operating Revenue (a normalized management-fee add-back standing in for the operator's actual reported management fee), and Cap Rate Supportable % = EBIDAR &divide; Purchase Price &mdash; both match the underwriting model's own covenant measures exactly. Purchase prices are package-level, not per-facility &mdash; e.g. all 7 Arcadia facilities under the Petersen SNF master lease were bought as one package with one price, so EBIDAR for every facility in a package is summed before comparing to that package's single price. EBIDAR for the selected months is annualized (&times; 12 &divide; number of months with data) so an interim period compares fairly against the one-time purchase price; selecting T12 needs no scaling. "Covenant Status" reads "Shortfall" whenever annualized EBIDAR falls short of Purchase Price &times; the target cap rate above, "Supported" otherwise. Only the Petersen SNF packages (all 8 manager brands) and 1155 N First St/Evercare have a purchase price on file; the ~11 other individually-owned properties show "no purchase price data" rather than a guessed figure. See PROJECT_RULES.md section 9a for the landlord/master-lease structure this reflects.</p>
 </div>
 
 <script>
@@ -327,16 +333,28 @@ function setTrailingRange(n){
 }
 
 // --- package math ----------------------------------------------------------
+// The covenant metric is EBIDAR, not EBIDARM -- EBIDAR = EBIDARM minus a
+// normalized management-fee add-back of 5% of Operating Revenue (NOT the
+// operator's actual reported management fee line). Confirmed against the
+// real underwriting model's own measures:
+//   Covenant Earnings ([EBIDAR]) = [EBIDARM] - 0.05 * [Total Operating Revenue]
+//   Cap Rate Supportable %       = DIVIDE([EBIDAR], [Purchase Price (PO)])
+// See PROJECT_RULES.md section 9a.
+const MGMT_FEE_ADDBACK_PCT = 0.05;
+
 // Annualized EBIDAR = sum(EBIDAR for months with data) x 12/(months with
 // data) -- never a straight-line guess for missing months, just scaling
 // what's actually reported so an interim period compares fairly against
-// the one-time purchase price.
+// the one-time purchase price. The add-back is linear in revenue, so
+// summing per-period EBIDAR across months is equivalent to summing
+// EBIDARM and revenue separately and combining once -- done that way here.
 function packagesInScope(){
   const ids = matchingFacilityIds();
   return DATA.packages
     .map(pkg => ({...pkg, facility_ids: pkg.facility_ids.filter(fid => ids.has(fid))}))
     .filter(pkg => pkg.facility_ids.length > 0);
 }
+function ebidarFor(row){ return row.ebidarm - MGMT_FEE_ADDBACK_PCT * row.operating_revenue; }
 function annualizedEbidar(facIds, periods){
   let sum = 0, monthsWithData = 0;
   const perPeriod = {};
@@ -344,12 +362,16 @@ function annualizedEbidar(facIds, periods){
     let v = 0, any = false;
     facIds.forEach(fid => {
       const row = ROW_BY_KEY[fid + "|" + p];
-      if (row){ v += row.ebidarm; any = true; }
+      if (row){ v += ebidarFor(row); any = true; }
     });
     if (any){ perPeriod[p] = v; sum += v; monthsWithData++; }
   });
   const factor = monthsWithData > 0 ? 12 / monthsWithData : null;
   return {sum, monthsWithData, annualized: factor !== null ? sum * factor : null, perPeriod};
+}
+function supportedLabel(annualized, required){
+  if (annualized === null) return null;
+  return annualized >= required ? "✓ Supported" : "✗ Shortfall";
 }
 function drawSpark(svg, vals){
   const clean = vals.filter(v => v !== null && v !== undefined);
@@ -388,7 +410,7 @@ function renderCards(pkgs, periods){
     svg.setAttribute("class","op-spark"); svg.setAttribute("viewBox","0 0 160 28"); svg.setAttribute("preserveAspectRatio","none");
     const monthlySeries = periods.map(p => {
       let v = 0, any = false;
-      pkg.facility_ids.forEach(fid => { const row = ROW_BY_KEY[fid + "|" + p]; if (row){ v += row.ebidarm; any = true; } });
+      pkg.facility_ids.forEach(fid => { const row = ROW_BY_KEY[fid + "|" + p]; if (row){ v += ebidarFor(row); any = true; } });
       return any ? (v * 12 / pkg.purchase_price) * 100 : null;
     });
     drawSpark(svg, monthlySeries);
@@ -412,6 +434,7 @@ function renderStats(pkgs, periods){
     document.getElementById("statEbidar").textContent = "–";
     document.getElementById("statSupportable").textContent = "–";
     document.getElementById("statSurplus").textContent = "–";
+    document.getElementById("statSupportedLabel").textContent = "–";
     return;
   }
   document.getElementById("statEbidar").textContent = fmtMoney(totalAnnualized);
@@ -423,6 +446,9 @@ function renderStats(pkgs, periods){
   const surplusEl = document.getElementById("statSurplus");
   surplusEl.textContent = fmtMoney(surplus);
   surplusEl.className = "stat-value " + (surplus >= 0 ? "good" : "bad");
+  const labelEl = document.getElementById("statSupportedLabel");
+  labelEl.textContent = supportedLabel(totalAnnualized, required);
+  labelEl.className = "stat-value " + (surplus >= 0 ? "good" : "bad");
 }
 
 function renderTable(pkgs, periods){
@@ -438,7 +464,7 @@ function renderTable(pkgs, periods){
     tr.appendChild(labelTd);
     const priceTd = document.createElement("td"); priceTd.textContent = fmtMoney(pkg.purchase_price); tr.appendChild(priceTd);
     if (annualized === null){
-      const td = document.createElement("td"); td.textContent = "–"; td.colSpan = 4; tr.appendChild(td);
+      const td = document.createElement("td"); td.textContent = "–"; td.colSpan = 5; tr.appendChild(td);
       body.appendChild(tr); return;
     }
     const ebidarTd = document.createElement("td"); ebidarTd.textContent = fmtMoney(annualized); tr.appendChild(ebidarTd);
@@ -449,6 +475,8 @@ function renderTable(pkgs, periods){
     const surplus = annualized - required;
     const surplusTd = document.createElement("td"); surplusTd.textContent = fmtMoney(surplus); surplusTd.classList.add(surplus >= 0 ? "pos" : "neg");
     tr.appendChild(surplusTd);
+    const statusTd = document.createElement("td"); statusTd.textContent = supportedLabel(annualized, required); statusTd.classList.add(surplus >= 0 ? "pos" : "neg");
+    tr.appendChild(statusTd);
     body.appendChild(tr);
   });
 
@@ -463,7 +491,7 @@ function renderTable(pkgs, periods){
   });
   Object.entries(uncoveredByGroup).forEach(([key, n]) => {
     const tr = document.createElement("tr"); tr.className = "no-price-row";
-    const td = document.createElement("td"); td.className = "linecell"; td.colSpan = 6;
+    const td = document.createElement("td"); td.className = "linecell"; td.colSpan = 7;
     td.textContent = key + " — no purchase price data (" + n + " facilit" + (n===1?"y":"ies") + ")";
     tr.appendChild(td); body.appendChild(tr);
   });

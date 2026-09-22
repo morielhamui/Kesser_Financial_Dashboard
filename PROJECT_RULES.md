@@ -484,6 +484,36 @@ monitor it for their own lenders, not landlords) — tracked here because
 Curis is a related operator, not because Kesser is the counterparty on
 these specific covenants.
 
+**Covenant formula (confirmed 2026-09-22 against the real underwriting
+model's own measures — this is not a general-experience guess; the
+purchase price file itself has no formula in it, only Landlord/Manager/
+Facility/Purchase Price):**
+
+```
+EBIDAR (covenant)     = EBIDARM − MgmtFeeAddBack
+MgmtFeeAddBack         = 5% × Operating Revenue
+                         (a NORMALIZED add-back, not the operator's own
+                         reported Management Fees line used elsewhere in
+                         the waterfall — §7's "Management Fees" and
+                         "Earnings" are a different, later step and are
+                         NOT part of this covenant calculation)
+Cap Rate Supportable % = EBIDAR ÷ Purchase Price
+Required EBIDAR        = Purchase Price × target cap rate
+Surplus / (Shortfall)  = EBIDAR − Required EBIDAR
+Covenant Status        = "Supported" if Surplus >= 0, else "Shortfall"
+```
+
+This EBIDAR is materially different from EBIDARM and can flip the
+coverage conclusion: e.g. Arcadia's T12 EBIDARM ($3.85M) alone would
+clear a 13% cap rate on a $27.468M purchase price, but after the 5%-of-
+revenue add-back (~$2.06M on ~$41.2M T12 revenue) actual covenant EBIDAR
+is only ~$1.79M — a real shortfall at every rate in the 10–13% range,
+not a surplus. **Lesson: don't reuse an existing waterfall subtotal
+(EBIDARM) as a covenant metric without confirming the exact covenant
+definition — a normalized management-fee add-back is a common enough
+convention that it's easy to assume, but the actual percentage and
+formula need the real source, not an assumption.**
+
 ## 10a. Known Data Gaps (as of initial load)
 
 Tracked so they aren't mistaken for load failures — every one of these is

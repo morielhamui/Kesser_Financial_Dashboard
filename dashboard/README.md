@@ -59,10 +59,16 @@ in place rather than creating a new one.
   EBIDAR coverage against purchase price, by landlord/manager package
   (`fact_purchase_price`, migration 007) -- currently the Petersen SNF
   master lease's 8 manager-brand packages plus one individually-owned
-  property. An adjustable target-cap-rate slider (default 13%) drives
-  the headline Required EBIDAR / surplus-shortfall figures, alongside a
-  fixed 10-13% sensitivity table. Package groups with no purchase price
-  on file are listed, not hidden, so a gap in coverage stays visible.
+  property. EBIDAR = EBIDARM minus a normalized 5%-of-Operating-Revenue
+  management-fee add-back (confirmed against the real underwriting
+  model's own measures, not the operator's actual reported management
+  fee) -- see PROJECT_RULES.md section 9a for the exact formula and why
+  it materially differs from just using EBIDARM. An adjustable
+  target-cap-rate slider (default 13%) drives the headline Required
+  EBIDAR / surplus-shortfall figures and a "Supported"/"Shortfall"
+  status badge, alongside a fixed 10-13% sensitivity table. Package
+  groups with no purchase price on file are listed, not hidden, so a
+  gap in coverage stays visible.
 - **T12 by Facility** (`export_t12_facility.py` / `build_t12_facility.py`)
   -- a benchmarking view: pick a landlord to scope the field, choose
   whether to compare by manager or by individual facility, then select
