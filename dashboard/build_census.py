@@ -147,6 +147,12 @@ tbody td.clickable:hover{box-shadow:inset 0 0 0 1px var(--accent);}
 .hfs-cell .ours{font-weight:600;}
 .hfs-cell .hfs{color:var(--muted); font-size:11px;}
 .hfs-good{color:var(--good);} .hfs-bad{color:var(--bad);}
+.hfs-flagged{background:var(--bad-soft); box-shadow:inset 0 0 0 1px var(--bad);}
+.flag-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:9px 18px; font-size:13px; border-bottom:1px solid var(--border);}
+.flag-row:last-child{border-bottom:none;}
+.flag-row .name{color:var(--ink); font-weight:500;}
+.flag-row .meta{color:var(--muted); font-size:11.5px;}
+.flag-row .variance{font-family:"IBM Plex Mono",monospace; font-weight:600; color:var(--bad); white-space:nowrap;}
 
 .stat-strip{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px;}
 .stat-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:6px;}
@@ -267,7 +273,7 @@ tr.sub td{color:var(--muted); font-size:12.5px;}
         <span class="stat-foot">in current filter</span>
       </div>
       <div class="stat-card">
-        <span class="stat-label">Within &plusmn;10%</span>
+        <span class="stat-label">Within &plusmn;5%</span>
         <span class="stat-value" id="hfsWithinTol">&ndash;</span>
         <span class="stat-foot" id="hfsWithinTolFoot">&nbsp;</span>
       </div>
@@ -276,6 +282,15 @@ tr.sub td{color:var(--muted); font-size:12.5px;}
         <span class="stat-value" id="hfsMedian">&ndash;</span>
         <span class="stat-foot">ours vs. HFS</span>
       </div>
+      <div class="stat-card">
+        <span class="stat-label">Flagged (&gt;5%)</span>
+        <span class="stat-value" id="hfsFlaggedCount">&ndash;</span>
+        <span class="stat-foot">facility-quarters to review</span>
+      </div>
+    </div>
+    <div class="table-card" id="flaggedCard" hidden>
+      <div style="padding:14px 18px 4px; font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.04em;">Flagged facility-quarters</div>
+      <div id="flaggedList"></div>
     </div>
     <div class="table-card">
       <div class="table-scroll">
@@ -287,7 +302,7 @@ tr.sub td{color:var(--muted); font-size:12.5px;}
     </div>
   </div>
 
-  <p class="footnote">Occupancy excludes the 2 facilities with no recorded bed count (flagged "no beds") from both the numerator and denominator, so the blended % isn't distorted by an unknown capacity. Payor mix folds smaller payors (Veterans, Assisted Living, Independent Living, Medicare B, and any unmatched line) into "Other" to keep the chart's colors distinguishable &mdash; the underlying figures keep full payor detail. HFS comparison uses the traditional fee-for-service Medicaid payor only, never Managed Medicaid, since Medicaid MCOs negotiate their own contracted rates rather than following HFS's published fee schedule; blank cells mean we have no Medicaid census/revenue for that facility that quarter. See PROJECT_RULES.md section 5 for the full methodology.</p>
+  <p class="footnote">Occupancy excludes the 2 facilities with no recorded bed count (flagged "no beds") from both the numerator and denominator, so the blended % isn't distorted by an unknown capacity. Payor mix folds smaller payors (Veterans, Assisted Living, Independent Living, Medicare B, and any unmatched line) into "Other" to keep the chart's colors distinguishable &mdash; the underlying figures keep full payor detail. HFS comparison uses the traditional fee-for-service Medicaid payor only, never Managed Medicaid, since Medicaid MCOs negotiate their own contracted rates rather than following HFS's published fee schedule; blank cells mean we have no Medicaid census/revenue for that facility that quarter. Facility-quarters where our calculated rate differs from HFS's published rate by more than 5% are flagged (&#9888;&#65039;, red background) for review. See PROJECT_RULES.md section 5 for the full methodology.</p>
 </div>
 
 <div class="drill-backdrop" id="drillBackdrop" hidden>
@@ -324,6 +339,10 @@ let expandedOcc = new Set();
 // keeps full payor detail regardless.
 const CHART_PAYORS = ["Medicaid","Managed Medicaid","Medicare","Private","Managed Medicare","Insurance/Commercial","Hospice"];
 const CHART_COLORS = ["var(--series-1)","var(--series-2)","var(--series-3)","var(--series-4)","var(--series-5)","var(--series-6)","var(--series-7)","var(--series-8)"];
+
+// Facility-quarters where our calculated Medicaid rate differs from HFS's
+// published rate by more than this get flagged for review.
+const HFS_FLAG_PCT = 5;
 
 function fmtMonth(period){
   const [y,m] = period.split("-");
@@ -647,6 +666,7 @@ function renderHfsTable(){
   if (sortedFacs.length === 0){
     const tr = document.createElement("tr"); const td = document.createElement("td"); td.className="linecell"; td.textContent="No HFS-matched facilities in the current filter."; tr.appendChild(td); body.appendChild(tr);
   }
+  const flagged = [];
   sortedFacs.forEach(f => {
     const tr = document.createElement("tr");
     const labelTd = document.createElement("td"); labelTd.className = "linecell"; labelTd.textContent = f.name; tr.appendChild(labelTd);
@@ -655,17 +675,31 @@ function renderHfsTable(){
       const r = byFacility[f.facility_id][q];
       if (!r || r.our_rate === null){ td.innerHTML = "–"; tr.appendChild(td); return; }
       const pct = (r.our_rate - r.hfs_rate) / r.hfs_rate * 100;
-      const cls = Math.abs(pct) <= 10 ? "hfs-good" : "hfs-bad";
-      td.innerHTML = '<div class="ours">$' + r.our_rate.toFixed(2) + '</div><div class="hfs ' + cls + '">HFS $' + r.hfs_rate.toFixed(2) + ' (' + (pct>=0?'+':'') + pct.toFixed(1) + '%)</div>';
+      const isFlagged = Math.abs(pct) > HFS_FLAG_PCT;
+      if (isFlagged){ td.classList.add("hfs-flagged"); flagged.push({facility: f.name, quarter: q, our_rate: r.our_rate, hfs_rate: r.hfs_rate, pct}); }
+      const cls = isFlagged ? "hfs-bad" : "hfs-good";
+      const flag = isFlagged ? '⚠️ ' : '';
+      td.innerHTML = '<div class="ours">$' + r.our_rate.toFixed(2) + '</div><div class="hfs ' + cls + '">' + flag + 'HFS $' + r.hfs_rate.toFixed(2) + ' (' + (pct>=0?'+':'') + pct.toFixed(1) + '%)</div>';
       tr.appendChild(td);
     });
     body.appendChild(tr);
   });
 
+  document.getElementById("hfsFlaggedCount").textContent = flagged.length;
+  const flaggedCard = document.getElementById("flaggedCard");
+  const flaggedList = document.getElementById("flaggedList");
+  flaggedCard.hidden = flagged.length === 0;
+  flaggedList.innerHTML = "";
+  flagged.sort((a,b) => Math.abs(b.pct) - Math.abs(a.pct)).forEach(f => {
+    const row = document.createElement("div"); row.className = "flag-row";
+    row.innerHTML = '<div><div class="name">' + f.facility + '</div><div class="meta">' + fmtMonth(f.quarter) + ' · ours $' + f.our_rate.toFixed(2) + ' vs. HFS $' + f.hfs_rate.toFixed(2) + '</div></div><div class="variance">' + (f.pct>=0?'+':'') + f.pct.toFixed(1) + '%</div>';
+    flaggedList.appendChild(row);
+  });
+
   const withData = compareRows.filter(r => r.our_rate !== null);
   document.getElementById("hfsCompared").textContent = withData.length;
   if (withData.length > 0){
-    const withinTol = withData.filter(r => Math.abs((r.our_rate - r.hfs_rate) / r.hfs_rate * 100) <= 10);
+    const withinTol = withData.filter(r => Math.abs((r.our_rate - r.hfs_rate) / r.hfs_rate * 100) <= HFS_FLAG_PCT);
     document.getElementById("hfsWithinTol").textContent = withinTol.length + " / " + withData.length;
     document.getElementById("hfsWithinTolFoot").textContent = (100*withinTol.length/withData.length).toFixed(1) + "% of comparisons";
     const pcts = withData.map(r => (r.our_rate - r.hfs_rate) / r.hfs_rate * 100).sort((a,b)=>a-b);
