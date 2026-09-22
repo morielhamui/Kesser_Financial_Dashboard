@@ -41,10 +41,22 @@ from __future__ import annotations
 
 import sqlite3
 
-# Categories that make up "Operating Revenue" per the formula above.
-# QIP is identified by detail, not category, since it's tagged
-# category="Other Income / Expense", detail="QIP" across operators.
-_REVENUE_CATEGORIES_IN_OPERATING = ("Resident Income", "Ancillary")
+# Operating Revenue = every revenue row EXCEPT the "Other Income / Expense"
+# catch-all (QIP excepted -- see below). This is an exclusion rule, not an
+# allowlist of category names, because each operator's own chart of
+# accounts names its core resident-payor revenue differently -- "Resident
+# Income" (Curis/Evercare/Extendicare/Lincoln/Lineage/Aliya after its own
+# "Revenue by Payor" rows are correctly split out of "Other Income /
+# Expense"), or per-payor category names directly (Allure: "Medicaid",
+# "Medicare A", "Private Pay", etc.). An allowlist of specific category
+# names silently zeroed out Operating Revenue for any operator whose
+# categories didn't happen to match it (this bit both Aliya and Allure
+# before this fix). "Other Income / Expense" is the one category name
+# every operator's non-operating catch-all consistently uses, so excluding
+# it is the robust rule. QIP is identified by detail, not category, since
+# it's tagged category="Other Income / Expense", detail="QIP" across
+# operators, and gets added back in separately.
+_NON_OPERATING_REVENUE_CATEGORY = "Other Income / Expense"
 
 
 def pick_canonical_source(conn: sqlite3.Connection) -> list[tuple[int, str, str]]:
@@ -94,8 +106,8 @@ def _sum(conn, facility_id, period_date, source_file, where_sql, params=()):
 def compute_one(conn: sqlite3.Connection, facility_id: int, period_date: str, source_file: str) -> dict:
     revenue_ancillary_resident = _sum(
         conn, facility_id, period_date, source_file,
-        "m.statement_type = 'revenue' AND m.category IN (?, ?)",
-        _REVENUE_CATEGORIES_IN_OPERATING,
+        "m.statement_type = 'revenue' AND m.category != ?",
+        (_NON_OPERATING_REVENUE_CATEGORY,),
     )
     qip = _sum(
         conn, facility_id, period_date, source_file,

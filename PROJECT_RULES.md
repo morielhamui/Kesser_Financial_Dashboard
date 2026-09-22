@@ -240,6 +240,51 @@ NOI                              = Earnings + Other Income/Expense
 - **Aliya indentation hierarchy**: up to 5 levels deep. Must track
   indentation depth with an explicit stack, not keyword matching, to
   correctly attribute child accounts to the right parent category.
+- **Aliya revenue mis-categorized as non-operating** (found 2026-09-22 while
+  building the dashboard): every row under Aliya's
+  "Revenue" section was unconditionally tagged `category="Other Income /
+  Expense"`, including core payor revenue ("Revenue by Payor: Medicaid",
+  "Medicare A", "Private", etc.) that belongs in `category="Resident
+  Income"` like every other operator. Validation still passed (it sums the
+  whole `statement_type='revenue'` bucket regardless of category), so this
+  was invisible until the metrics/waterfall layer's Operating Revenue came
+  out as $0 for every Aliya facility-period. Fixed by branching on the
+  stack's "Revenue by Payor" vs "Revenue Other" qualifier in
+  `parsers/aliya.py`. **Lesson: category correctness inside a
+  `statement_type` bucket isn't exercised by the Net Income validation
+  gate — it has to be checked separately (e.g. by eyeballing computed
+  Operating Revenue per operator for zeroes/outliers) before trusting the
+  metrics layer.**
+- **Operating Revenue formula was an allowlist, not an exclusion rule**:
+  `metrics/waterfall.py` originally computed Operating Revenue as
+  `category IN ('Resident Income', 'Ancillary')`. This silently zeroed out
+  Operating Revenue for any operator whose chart of accounts didn't use
+  those exact category names — bit Allure, whose parser assigns each payor
+  its own category (`Medicaid`, `Medicare A`, `Private Pay`, etc.) directly
+  rather than grouping them under `Resident Income`. Fixed by inverting the
+  rule: Operating Revenue = every `statement_type='revenue'` row **except**
+  `category='Other Income / Expense'` (the one non-operating catch-all name
+  every operator's mapping consistently uses), with QIP still added back in
+  separately by `detail='QIP'`. **Lesson: prefer exclusion rules over
+  category allowlists when the category vocabulary isn't standardized
+  across operators.**
+- **Re-running a parser against an already-loaded database double-counts
+  everything**: `insert_financial_fact`/`insert_census_fact` are
+  intentionally additive on conflict (a raw label can legitimately repeat
+  under different subgroups within one parse run), so re-running a parser a
+  second time against a database that already has that file's rows adds
+  the amounts again rather than replacing them. Always use
+  `scripts/load_all.py --fresh` (full rebuild from raw files) when
+  re-loading after a parser or mapping fix — never re-run a single
+  operator's parser in place against existing data.
+- **Census de-duplication**: `fact_census` needs the exact same
+  canonical-source-file filtering as `fact_tenant_financials` (see §7's
+  `pick_canonical_source`) before summing `resident_days` — the census tab
+  lives in the same rolling-T12 workbooks as the financials, so summing
+  raw `resident_days` across all `source_file`s for a facility/period
+  double- (or 13x-) counts overlapping months. Any new query against
+  `fact_census` must filter to the canonical `source_file` per
+  facility/period first.
 
 ## 9. Database Schema (see `db/migrations/` for DDL)
 

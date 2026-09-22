@@ -226,8 +226,16 @@ def parse_and_load(conn, ws, facility_id, period_cols, operator_id, source_file,
                     insert_census_fact(conn, facility_id, period_date, payor, float(v), source_file, load_batch_id)
             continue
 
+        qualifier = stack[1][1] if len(stack) >= 2 else (stack[-1][1] if stack else "")
+
         if top_section == "revenue":
-            statement_type, category = "revenue", "Other Income / Expense"
+            statement_type = "revenue"
+            # "Revenue by Payor" rows are core resident revenue (Medicaid,
+            # Medicare, Private, etc.) and belong in Operating Revenue
+            # alongside every other operator's "Resident Income" category.
+            # Only "Revenue Other" (grants, HFS incentives, interest income,
+            # vaccines) is genuinely non-operating.
+            category = "Resident Income" if "payor" in qualifier.lower() else "Other Income / Expense"
         elif top_section == "operating expenses":
             statement_type = "opex"
             department_label = stack[1][1].lower() if len(stack) >= 2 else ""
@@ -238,7 +246,6 @@ def parse_and_load(conn, ws, facility_id, period_cols, operator_id, source_file,
             continue
 
         code, gl_label = split_code_and_label(text)
-        qualifier = stack[1][1] if len(stack) >= 2 else (stack[-1][1] if stack else "")
         raw_label = f"{qualifier}: {gl_label}"
         sub_group = salaries_or_other(gl_label)
         detail = NON_OPERATING_TO_CATEGORY.get(qualifier.lower(), gl_label) if top_section == "non operating expenses" else gl_label
