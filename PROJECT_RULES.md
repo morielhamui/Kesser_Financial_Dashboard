@@ -467,6 +467,23 @@ planned but not yet loaded — the Portfolio Spread sheet's P&L block isn't
 consistently dated the way Bank Balance is, so period semantics need to
 be nailed down before loading it as a time series.
 
+### Purchase price (for Covenant & EBIDAR)
+
+`fact_purchase_price` (migration 007, loaded by
+`db/seed/load_purchase_prices.py` from
+`data/reference/purchase_option_listing.xlsx`) holds one Purchase Price
+per **(landlord, brand) package** — not per facility, since e.g. all 7
+Arcadia facilities under the Petersen SNF master lease were bought as one
+package with one price. As of 2026-09-22 this covers all 8 of Petersen
+SNF's manager-brand packages (Arcadia, Arcadia - ALF, Axiom, Evercare,
+Extended Care, Goldwater, Lincoln, Lineage) plus one individually-owned
+property (1155 N First St / Evercare); the ~11 other individually-owned
+properties have no purchase price yet. EBIDAR coverage against these
+prices is fundamentally an operator-side covenant metric (tenants
+monitor it for their own lenders, not landlords) — tracked here because
+Curis is a related operator, not because Kesser is the counterparty on
+these specific covenants.
+
 ## 10a. Known Data Gaps (as of initial load)
 
 Tracked so they aren't mistaken for load failures — every one of these is
