@@ -17,6 +17,7 @@ demand. To update a page after a database or script change:
 ```bash
 python3 dashboard/export_t12.py && python3 dashboard/build_t12.py
 python3 dashboard/export_ppd.py && python3 dashboard/build_ppd.py
+python3 dashboard/export_census.py && python3 dashboard/build_census.py
 ```
 
 Then publish the resulting `.html` file with the Artifact tool. If the
@@ -37,6 +38,16 @@ in place rather than creating a new one.
   §5 and independently validated against Illinois HFS's published
   Medicaid rates (see §8/`scripts/compare_hfs_medicaid_rates.py`) --
   98.2% of comparable facility-quarters land within +/-10%.
+- **Census & Occupancy** (`export_census.py` / `build_census.py`) --
+  resident mix by payor (donut snapshot + 100%-stacked trend, using the
+  dataviz skill's validated 8-hue categorical palette), occupancy %
+  (resident days &divide; licensed beds &times; days in month, weighted,
+  never an average of per-facility %s), and a live Medicaid-rate-vs-HFS
+  comparison table (the same methodology as the PPD page's HFS validation,
+  now surfaced per facility/quarter instead of only as an offline script).
+  Licensed bed counts come from `dim_facility.total_beds` (migration 006),
+  sourced the same way `hfs_building_id` was (migration 005): a column
+  that was already in `facility_listing.xlsx` but never persisted.
 
 Design system (palette, type pairing, filter/drill-down interaction
 patterns) is shared across pages for visual consistency; see the inline

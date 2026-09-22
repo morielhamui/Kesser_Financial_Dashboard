@@ -366,6 +366,23 @@ all have very small Medicaid census that quarter (126–855 days, i.e.
 roughly 1–9 average daily Medicaid patients) — thin-denominator timing
 noise is a sufficient explanation and wasn't investigated further.
 
+This comparison is also surfaced live on the Census & Occupancy dashboard
+page (not just the offline script) — same methodology, per facility per
+HFS quarter.
+
+### Licensed bed counts (for occupancy %)
+
+`dim_facility.total_beds` / `skilled_beds` (migration 006) are populated
+by `db/seed/load_facility_listing.py` from `facility_listing.xlsx`'s
+`total_beds`/`skilled_beds` columns — the same situation as
+`hfs_building_id` before migration 005: the source file already had the
+data, it just wasn't being persisted. `total_beds` (total licensed
+capacity) is the correct occupancy denominator; `skilled_beds` is a
+subset for facilities licensed as combined SNF/ICF and isn't used in the
+occupancy calculation. 2 facilities have no recorded bed count (Villas at
+Havana, Ironwood — both pre-existing data gaps, see §10a) and are
+excluded from occupancy math entirely rather than guessed at.
+
 ## 9. Database Schema (see `db/migrations/` for DDL)
 
 - `dim_facility`

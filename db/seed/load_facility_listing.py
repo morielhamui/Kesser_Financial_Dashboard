@@ -141,20 +141,24 @@ def main() -> int:
         notes = "; ".join(notes_parts)
 
         landlord_id = get_landlord_id(landlord_name) if landlord_name and landlord_name.strip() else None
+        total_beds_val = int(total_beds) if isinstance(total_beds, (int, float)) else None
+        skilled_beds_val = int(skilled_beds) if isinstance(skilled_beds, (int, float)) else None
 
         cur.execute(
             """
             INSERT INTO dim_facility
-                (operator_id, facility_name, brand, facility_group, state, is_active, notes, landlord_id)
-            VALUES (?, ?, ?, NULL, ?, ?, ?, ?)
+                (operator_id, facility_name, brand, facility_group, state, is_active, notes, landlord_id, total_beds, skilled_beds)
+            VALUES (?, ?, ?, NULL, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(operator_id, facility_name) DO UPDATE SET
                 brand = excluded.brand,
                 state = excluded.state,
                 is_active = excluded.is_active,
                 notes = excluded.notes,
-                landlord_id = excluded.landlord_id
+                landlord_id = excluded.landlord_id,
+                total_beds = excluded.total_beds,
+                skilled_beds = excluded.skilled_beds
             """,
-            (operator_id, facility_name, brand, (state or "").strip() or None, is_active, notes, landlord_id),
+            (operator_id, facility_name, brand, (state or "").strip() or None, is_active, notes, landlord_id, total_beds_val, skilled_beds_val),
         )
         cur.execute(
             "SELECT facility_id FROM dim_facility WHERE operator_id = ? AND facility_name = ?",
