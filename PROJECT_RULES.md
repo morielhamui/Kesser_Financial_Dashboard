@@ -263,6 +263,41 @@ applying `sign_multiplier`, and producing rows for
 `fact_tenant_financials` / `fact_census`. Every parser run must pass
 through the validation module (§6) before rows are marked loaded.
 
+## 9a. Landlord Structure (confirmed with user)
+
+Every facility has a **landlord** entity distinct from its operator/
+manager — tracked in `dim_landlord`, linked via `dim_facility.landlord_id`
+(sourced from the facility master's `Landlord Name` column). Confirmed
+against `data/reference/portfolio_spread_and_mid_month_bank_balances.xlsx`
+(Portfolio Spread + Bank Balance - Mid Month tabs):
+
+- **Individually-owned properties** (12 of them: Aperion Glenwood, PG
+  Realty, 1201 21st St, 1301 21st St, 612 W St Mary, 308 S 2nd St, Kansas
+  City Property, Tonganoxie Property, Ed Prop, Univ Prop, 1155 N First St,
+  900 E. Corporation, 221 E. Cumberland, 4340 N. Keystone): each landlord
+  collects **Rent credit** from its facility's operator, pays its own
+  **Mortgage/Loan payment**, and separately pays a **Kesser bill** — a fee
+  the landlord pays *to* Kesser for management services. Example: 221 E.
+  Cumberland is the landlord for St. Elmo — it collects rent from the St.
+  Elmo operator, pays its own mortgage, and pays a Kesser fee. **This
+  Kesser bill has nothing to do with the operator's own "Management Fees"
+  line in fact_tenant_financials** (that's a fee the operator pays its own
+  management company, unrelated to Kesser). Kesser's true revenue = the
+  sum of these Kesser bills across all landlords, not the operator-paid
+  Management Fees.
+- **Petersen SNF** is a **master lease**: all Curis-brand operators
+  (Arcadia, Axiom, Evercare, Extended Care, Goldwater, Lineage, Lincoln
+  brands) pay their rent to Petersen SNF as the master lessee, and
+  Petersen SNF in turn pays **Caretrust** (the actual real estate
+  owner/REIT) — a pass-through spread, not a direct landlord-collects-
+  rent-and-keeps-it structure like the individually-owned properties.
+
+`fact_landlord_pl` (rent credit / mortgage / Kesser bill per landlord per
+period) and `fact_bank_balance` (mid-month cash balance per landlord) are
+planned but not yet loaded — the Portfolio Spread sheet's P&L block isn't
+consistently dated the way Bank Balance is, so period semantics need to
+be nailed down before loading it as a time series.
+
 ## 10a. Known Data Gaps (as of initial load)
 
 Tracked so they aren't mistaken for load failures — every one of these is
