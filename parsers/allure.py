@@ -168,6 +168,15 @@ def _log_unmapped(conn, period_date, source_file, load_batch_id, raw_label):
 
 def parse_and_load(conn, grid, period_cols, facility_id, operator_id, source_file, load_batch_id):
     section = None  # 0-indent header currently open: None until we see one
+
+    # Buffered rather than inserted inline, so the Patient Days corruption
+    # check below (comparing against revenue_by_payor) can run once the
+    # whole grid has been read -- Revenue always precedes Patient Days in
+    # this format, but buffering avoids depending on that row order.
+    revenue_by_payor: dict[str, dict[str, float]] = {}
+    census_by_payor: dict[str, dict[str, float]] = {}
+    total_patient_days: dict[str, float] = {}
+
     for row in grid:
         label = row[0]
         if not isinstance(label, str) or not label.strip():
@@ -178,6 +187,15 @@ def parse_and_load(conn, grid, period_cols, facility_id, operator_id, source_fil
 
         if indent == 0:
             if lower.startswith("total "):
+                # "TOTAL Patient Days" is the one total this parser keeps
+                # (see the corruption check below) -- captured here since
+                # every other "Total ..." row is a recomputed subtotal we
+                # deliberately skip and re-derive downstream.
+                if section is not None and section.lower() == "patient days" and lower == "total patient days":
+                    for c, period_date in period_cols.items():
+                        v = row[c] if c < len(row) else None
+                        if isinstance(v, (int, float)):
+                            total_patient_days[period_date] = v
                 continue  # closes whatever department/section was open
             if lower in ("net income - (loss)", "net income"):
                 for c, period_date in period_cols.items():
@@ -199,11 +217,15 @@ def parse_and_load(conn, grid, period_cols, facility_id, operator_id, source_fil
             for c, period_date in period_cols.items():
                 v = row[c] if c < len(row) else None
                 if isinstance(v, (int, float)) and v != 0:
-                    insert_census_fact(conn, facility_id, period_date, payor, float(v), source_file, load_batch_id)
+                    census_by_payor.setdefault(payor, {})[period_date] = float(v)
             continue
 
         if section_lower == "revenue":
             statement_type, category = "revenue", normalize_payor(text, OPERATOR_NAME)
+            for c, period_date in period_cols.items():
+                v = row[c] if c < len(row) else None
+                if isinstance(v, (int, float)):
+                    revenue_by_payor.setdefault(category, {})[period_date] = float(v)
         elif section_lower == "capital costs":
             statement_type, category = "capital", "Capital Expenses"
         else:
@@ -221,6 +243,52 @@ def parse_and_load(conn, grid, period_cols, facility_id, operator_id, source_fil
             if isinstance(v, (int, float)) and v != 0:
                 _log_unmapped(conn, period_date, source_file, load_batch_id, raw_label)
                 insert_financial_fact(conn, facility_id, period_date, mapping_id, float(v) * sign, source_file, "grid", load_batch_id)
+
+    _insert_census_with_corruption_guard(
+        conn, facility_id, source_file, load_batch_id, census_by_payor, revenue_by_payor, total_patient_days
+    )
+
+
+# Verified source-file bug (2025_YE_Walnut_Combined_Financial_Statements.xlsx):
+# the per-payor "Patient Days" leaves are byte-for-byte copies of the
+# same-label Revenue $ leaves for every period (a copy-paste/formula error
+# made when this "Combined" statement was assembled), while "TOTAL Patient
+# Days" is correct. A payor whose census series exactly matches that same
+# payor's revenue series is therefore untrustworthy: drop it and fold its
+# (now-unattributed) days into a payor="Other" row so blended/expense PPD
+# still reconciles to the real total, without pretending we know which
+# payor those days belong to. Payors that DON'T match (Independent Living,
+# in the one file this has been seen in) are trusted and loaded normally.
+def _insert_census_with_corruption_guard(
+    conn, facility_id, source_file, load_batch_id, census_by_payor, revenue_by_payor, total_patient_days
+):
+    trusted_totals: dict[str, float] = {}
+    for payor, by_period in census_by_payor.items():
+        revenue_series = revenue_by_payor.get(payor, {})
+        corrupted = bool(by_period) and all(
+            period_date in revenue_series and revenue_series[period_date] == v
+            for period_date, v in by_period.items()
+        )
+        if corrupted:
+            for period_date in by_period:
+                conn.execute(
+                    """
+                    INSERT INTO exceptions_log (facility_id, period_date, source_file, load_batch_id, exception_type, detail)
+                    VALUES (?, ?, ?, ?, 'corrupted_census', ?)
+                    """,
+                    (facility_id, period_date, source_file, load_batch_id,
+                     f"Patient Days figure for payor {payor!r} exactly matches that payor's Revenue $ "
+                     "(source-file copy-paste error) -- dropped; folded into payor='Other' via TOTAL Patient Days instead."),
+                )
+            continue
+        for period_date, v in by_period.items():
+            insert_census_fact(conn, facility_id, period_date, payor, v, source_file, load_batch_id)
+            trusted_totals[period_date] = trusted_totals.get(period_date, 0.0) + v
+
+    for period_date, total in total_patient_days.items():
+        residual = total - trusted_totals.get(period_date, 0.0)
+        if residual > 0.5:
+            insert_census_fact(conn, facility_id, period_date, "Other", residual, source_file, load_batch_id)
 
 
 def load_file(conn: sqlite3.Connection, path: str, operator_id: int, resolver: FacilityResolver) -> dict:

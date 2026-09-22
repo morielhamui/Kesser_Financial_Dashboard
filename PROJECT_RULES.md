@@ -320,6 +320,51 @@ NOI                              = Earnings + Other Income/Expense
   double- (or 13x-) counts overlapping months. Any new query against
   `fact_census` must filter to the canonical `source_file` per
   facility/period first.
+- **Allure of Walnut: corrupted "Patient Days" source data.**
+  `2025_YE_Walnut_Combined_Financial_Statements.xlsx`'s per-payor "Patient
+  Days" rows (Medicaid, Hospice, Medicare A, Commercial Insurance, Private
+  Pay, Veteran Affairs) are byte-for-byte identical to that same payor's
+  Revenue $ row, for every period — a copy-paste/formula error made when
+  this "Combined" (SNF + ILF) statement was assembled, not a parsing bug.
+  "TOTAL Patient Days" is correct; only the payor breakdown is corrupted
+  (confirmed: summing the broken payor rows gave >400,000 "resident days"
+  in a single quarter for a single small SNF). "Independent Living" is the
+  one payor row that is NOT corrupted. Found 2026-09-22 while validating
+  calculated Medicaid PPD against HFS's published rates (see below) — the
+  bug had been silently inflating Walnut's census by ~100-300x, though it
+  didn't corrupt anything for Mendota or Peru. `parsers/allure.py` now
+  detects this pattern generically (a payor's census series exactly
+  matching that payor's revenue series) and drops the corrupted payor
+  rows, folding the undistributed remainder of "TOTAL Patient Days" into a
+  `payor='Other'` row so blended PPD still reconciles to the true total
+  without pretending we know which payor those days belong to.
+
+### Verifying calculated Medicaid PPD against Illinois HFS's published rates
+
+`fact_hfs_rates` is populated from `db/seed/load_hfs_rates.py`, reading
+`data/reference/hfs_rates/hfs_RATES_<quarter>.xlsx` (Illinois HFS's own
+quarterly "Medicaid Rate List for Nursing Facilities" files, one row per
+SNF statewide, covering 2024-10-01 through 2026-07-01 so far). Facilities
+are matched to HFS's own "Building Id" via `dim_facility.hfs_building_id`
+(migration 005), itself sourced from `facility_listing.xlsx`'s
+`facility_id_ext` column — that column was already the correct HFS
+Building Id, just never persisted before this. One correction needed:
+Allure of Peru is `6004304` in our reference file but `6004303` in every
+HFS file (a typo in our own source data, not HFS's).
+
+`scripts/compare_hfs_medicaid_rates.py` compares our calculated Medicaid
+PPD (traditional fee-for-service "Medicaid" payor bucket only — never
+"Managed Medicaid", since MCOs negotiate their own contracted rates and
+aren't bound to HFS's published FFS schedule) against HFS's "Total Rate"
+(Capital + Support + Nursing) for the matching quarter. Result as of
+2026-09-22, after the Walnut census fix above: **166 of 169 comparable
+facility-quarters (98.2%) land within ±10% of HFS's published rate**,
+median variance +0.1%, mean +0.3% — strong independent confirmation that
+the payor-matched PPD methodology (§5) and the underlying revenue/census
+pipeline are correct. The 3 remaining outliers (Swansea x2, Jerseyville)
+all have very small Medicaid census that quarter (126–855 days, i.e.
+roughly 1–9 average daily Medicaid patients) — thin-denominator timing
+noise is a sufficient explanation and wasn't investigated further.
 
 ## 9. Database Schema (see `db/migrations/` for DDL)
 
