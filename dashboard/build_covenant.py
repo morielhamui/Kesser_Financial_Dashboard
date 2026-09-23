@@ -122,8 +122,6 @@ thead th.linecol{background:var(--surface-2); z-index:3;}
 tbody td.linecell .pkg-sub{display:block; font-size:11px; color:var(--muted); font-weight:400;}
 .pos{color:var(--good);} .neg{color:var(--bad);}
 .no-price-row td{color:var(--muted); font-style:italic;}
-tr.total-row td{background:var(--surface-2); font-weight:600; color:var(--ink);}
-tr.total-row td.linecell{background:var(--surface-2);}
 .penalty-note{background:var(--warn-soft); border:1px solid var(--warn); border-radius:10px; padding:10px 14px; font-size:12.5px; color:var(--ink-soft); display:flex; gap:8px; align-items:flex-start;}
 
 .footnote{font-size:11.5px; color:var(--muted); line-height:1.5; padding:2px 4px;}
@@ -135,7 +133,7 @@ tr.total-row td.linecell{background:var(--surface-2);}
   <div class="masthead">
     <span class="eyebrow">Kesser Financial Dashboard</span>
     <h1>Covenant &amp; EBIDAR</h1>
-    <p class="sub">Two separate tests, tracked independently: the <strong>Lease Covenant</strong> (rolling T12 EBIDAR vs. Annual Rent, per the Petersen SNF lease &mdash; a financial penalty applies if it's not met) and <strong>Cap Rate Supportable</strong> (EBIDAR vs. the purchase option price). Both use the same EBIDAR &mdash; EBIDARM less a normalized 5% of Operating Revenue management-fee add-back, not the operator's actual reported management fee &mdash; but compare it against two different benchmarks, so a package can pass one and fail the other. This is fundamentally an operator-side metric; we track it here because Curis is a related operator.</p>
+    <p class="sub">Two separate tests, tracked independently: the <strong>Lease Covenant</strong> (a collective test &mdash; rolling T12 Covenant Income across every Petersen SNF facility vs. 1.2&times; the rent Petersen SNF itself pays CareTrust, its upstream owner &mdash; a financial penalty applies if it's not met) and <strong>Cap Rate Supportable</strong> (EBIDAR by package vs. the purchase option price). Both use the same EBIDAR &mdash; EBIDARM less a normalized 5% of Operating Revenue management-fee add-back, not the operator's actual reported management fee &mdash; but compare it against two different benchmarks. This is fundamentally an operator-side metric; we track it here because Curis is a related operator.</p>
   </div>
 
   <div class="filters">
@@ -161,53 +159,10 @@ tr.total-row td.linecell{background:var(--surface-2);}
         <button class="chip" id="t12Btn" type="button">T12</button>
       </div>
     </div>
-    <p class="filter-hint">Click a chip to select it on its own. Ctrl/Cmd-click to add it to the current selection. The month range and T3/T12 buttons only affect the Cap Rate Supportable section below &mdash; the Lease Covenant test is always the trailing 12 months, per the lease, regardless of what's selected here.</p>
+    <p class="filter-hint">Manager/Landlord/Facility filters and the month range only affect the Cap Rate Supportable section below &mdash; the Lease Covenant test is a fixed, collective measure (always every facility, always trailing 12 months) and doesn't change with what's selected here.</p>
   </div>
 
-  <div class="section">
-    <div class="section-head">
-      <h2>Lease Covenant Test</h2>
-      <span class="section-note">Rolling T12 EBIDAR vs. Annual Rent (12 &times; monthly rent) &mdash; always trailing 12 months, per the lease</span>
-    </div>
-    <div class="stat-strip">
-      <div class="stat-card">
-        <span class="stat-label">Annual rent</span>
-        <span class="stat-value" id="statRent">&ndash;</span>
-        <span class="stat-foot">in current filter</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-label">T12 EBIDAR</span>
-        <span class="stat-value" id="statCovEbidar">&ndash;</span>
-        <span class="stat-foot" id="statCovEbidarFoot">&nbsp;</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-label">Surplus / (shortfall)</span>
-        <span class="stat-value" id="statCovSurplus">&ndash;</span>
-        <span class="stat-foot">EBIDAR vs. annual rent</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-label">Covenant Status</span>
-        <span class="stat-value" id="statCovStatus">&ndash;</span>
-        <span class="stat-foot">a shortfall triggers a lease penalty</span>
-      </div>
-    </div>
-    <div class="table-card">
-      <div class="table-scroll">
-        <table id="covenantTable">
-          <thead><tr>
-            <th class="linecol">Package</th>
-            <th>Monthly Rent</th>
-            <th>Annual Rent</th>
-            <th>T12 EBIDAR</th>
-            <th>Surplus / (Shortfall)</th>
-            <th>Covenant Status</th>
-          </tr></thead>
-          <tbody id="covenantBody"></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="penalty-note">&#9888;&#65039; A "Breach" here means rolling T12 EBIDAR fell short of the package's Annual Rent &mdash; the lease imposes a financial penalty when that happens, independent of the Cap Rate Supportable test below.</div>
-  </div>
+  <div id="covenantSections"></div>
 
   <div class="section-head" style="margin-top:6px;">
     <h2>Cap Rate Supportable (Purchase Option)</h2>
@@ -288,7 +243,7 @@ tr.total-row td.linecell{background:var(--surface-2);}
     </div>
   </div>
 
-  <p class="footnote">EBIDAR = EBIDARM &minus; 5% of Operating Revenue (a normalized management-fee add-back standing in for the operator's actual reported management fee) &mdash; the same EBIDAR feeds both tests below, compared against two different benchmarks. <strong>Lease Covenant</strong>: rolling T12 EBIDAR vs. Annual Rent (12 &times; the monthly rent on file, from the Kesser portfolio spread) &mdash; always the trailing 12 months per the lease, regardless of the month-range filter above; a shortfall ("Breach") triggers a financial penalty under the lease. Currently loaded for the 8 Petersen SNF manager packages only (`fact_lease_rent`, migration 008); other properties show no row here until their lease rent is on file. <strong>Cap Rate Supportable</strong>: EBIDAR for the selected months, annualized (&times; 12 &divide; number of months with data), vs. Purchase Price &times; the target cap rate slider &mdash; a purchase-option affordability test, unrelated to the lease covenant. Purchase prices and rents are both package-level, not per-facility &mdash; e.g. all 7 Arcadia facilities under the Petersen SNF master lease were bought as one package and pay one combined rent, so EBIDAR for every facility in a package is summed before comparing to that package's price or rent. Only the Petersen SNF packages (all 8 manager brands) and 1155 N First St/Evercare have a purchase price on file; the ~11 other individually-owned properties show "no purchase price data" rather than a guessed figure. See PROJECT_RULES.md section 9a for the landlord/master-lease structure this reflects.</p>
+  <p class="footnote">EBIDAR = EBIDARM &minus; 5% of Operating Revenue (a normalized management-fee add-back standing in for the operator's actual reported management fee) &mdash; the same EBIDAR feeds both tests, compared against two different benchmarks. <strong>Lease Covenant</strong>: a collective measure, not a per-manager or per-package one &mdash; rolling T12 Covenant Income summed across every facility a landlord operates, vs. 1.2&times; the Annual Rent that landlord itself pays its own upstream owner (`fact_lease_rent`, migration 009, currently just Petersen SNF's rent to CareTrust, $810,333.28/mo &mdash; NOT the larger figure Petersen SNF collects from its own operators, a different number entirely). Always the trailing 12 months per the lease, regardless of the filters or month-range above; a shortfall ("Breach") triggers a financial penalty under the lease. <strong>Cap Rate Supportable</strong>: EBIDAR by package for the selected months, annualized (&times; 12 &divide; number of months with data), vs. Purchase Price &times; the target cap rate slider &mdash; a purchase-option affordability test, unrelated to the lease covenant. Purchase prices are package-level, not per-facility &mdash; e.g. all 7 Arcadia facilities under the Petersen SNF master lease were bought as one package with one price, so EBIDAR for every facility in a package is summed before comparing to that package's price. Only the Petersen SNF packages (all 8 manager brands) and 1155 N First St/Evercare have a purchase price on file; the ~11 other individually-owned properties show "no purchase price data" rather than a guessed figure. See PROJECT_RULES.md section 9a for the landlord/master-lease structure this reflects.</p>
 </div>
 
 <script>
@@ -407,24 +362,20 @@ function packagesInScope(){
     .map(pkg => ({...pkg, facility_ids: pkg.facility_ids.filter(fid => ids.has(fid))}))
     .filter(pkg => pkg.facility_ids.length > 0 && pkg.purchase_price !== null && pkg.purchase_price !== undefined);
 }
-// Separate scope for the Lease Covenant test -- a package can have rent
-// data without purchase price data (or vice versa); the two tests are
-// independent and must not be conflated into one filtered list.
-function rentedPackagesInScope(){
-  const ids = matchingFacilityIds();
-  return DATA.packages
-    .map(pkg => ({...pkg, facility_ids: pkg.facility_ids.filter(fid => ids.has(fid))}))
-    .filter(pkg => pkg.facility_ids.length > 0 && pkg.monthly_rent !== null && pkg.monthly_rent !== undefined);
-}
 function ebidarFor(row){ return row.ebidarm - MGMT_FEE_ADDBACK_PCT * row.operating_revenue; }
-// The lease covenant is ALWAYS a rolling trailing-12-months figure per the
-// lease agreement (a financial penalty applies if EBIDAR falls short of
-// Annual Rent) -- independent of the shared month-range picker below,
-// unlike the Cap Rate Supportable test which legitimately varies with
-// whatever window the user selects.
-function covenantT12(facIds){
-  const idSet = new Set(facIds);
-  const avail = Array.from(new Set(DATA.rows.filter(r => idSet.has(r.facility_id)).map(r => r.period))).sort();
+
+// The lease covenant is a COLLECTIVE, landlord-level test -- Covenant
+// Income summed across EVERY facility under that landlord (all manager
+// brands together), compared to the ONE rent that landlord itself pays
+// its own upstream owner (e.g. Petersen SNF -> CareTrust) -- never a
+// per-manager or per-package number, and never the Manager/Landlord/
+// Facility filter chips above (those scope the Cap Rate Supportable
+// section only). Rolling T12, always, per the lease -- independent of
+// the shared month-range picker too.
+const MIN_COVERAGE_RATIO = 1.2;
+function landlordCovenantTest(landlordRent){
+  const facIds = landlordRent.facility_ids;
+  const avail = Array.from(new Set(DATA.rows.filter(r => facIds.includes(r.facility_id)).map(r => r.period))).sort();
   const t12 = avail.slice(-12);
   let sum = 0;
   t12.forEach(p => {
@@ -433,7 +384,9 @@ function covenantT12(facIds){
       if (row) sum += ebidarFor(row);
     });
   });
-  return {sum, months: t12.length, periods: t12};
+  const annualRent = landlordRent.monthly_rent * 12;
+  const required = annualRent * MIN_COVERAGE_RATIO;
+  return {sum, months: t12.length, annualRent, required, surplus: sum - required};
 }
 function annualizedEbidar(facIds, periods){
   let sum = 0, monthsWithData = 0;
@@ -611,78 +564,36 @@ function renderSensitivity(pkgs, periods){
   });
 }
 
-function renderCovenant(pkgs){
-  const body = document.getElementById("covenantBody");
-  body.innerHTML = "";
-  let totalRent = 0, totalEbidar = 0, anyData = false;
-
-  pkgs.forEach(pkg => {
-    const {sum, months} = covenantT12(pkg.facility_ids);
-    const annualRent = pkg.monthly_rent * 12;
-    totalRent += annualRent;
-
-    const tr = document.createElement("tr");
-    const labelTd = document.createElement("td"); labelTd.className = "linecell";
-    labelTd.innerHTML = pkg.brand + '<span class="pkg-sub">' + pkg.landlord + ' · ' + pkg.facility_ids.length + ' facilit' + (pkg.facility_ids.length===1?'y':'ies') + '</span>';
-    tr.appendChild(labelTd);
-    const rentTd = document.createElement("td"); rentTd.textContent = fmtMoney(pkg.monthly_rent); tr.appendChild(rentTd);
-    const annualTd = document.createElement("td"); annualTd.textContent = fmtMoney(annualRent); tr.appendChild(annualTd);
-    if (months === 0){
-      const td = document.createElement("td"); td.textContent = "–"; td.colSpan = 3; tr.appendChild(td);
-      body.appendChild(tr); return;
-    }
-    totalEbidar += sum; anyData = true;
-    const ebidarTd = document.createElement("td"); ebidarTd.textContent = fmtMoney(sum);
-    if (months < 12) ebidarTd.title = "Only " + months + " month" + (months===1?"":"s") + " of data available (T12 needs 12)";
-    tr.appendChild(ebidarTd);
-    const surplus = sum - annualRent;
-    const surplusTd = document.createElement("td"); surplusTd.textContent = fmtMoney(surplus); surplusTd.classList.add(surplus >= 0 ? "pos" : "neg");
-    tr.appendChild(surplusTd);
-    const statusTd = document.createElement("td");
-    statusTd.textContent = surplus >= 0 ? "✓ Met" : "✗ Breach";
-    statusTd.classList.add(surplus >= 0 ? "pos" : "neg");
-    tr.appendChild(statusTd);
-    body.appendChild(tr);
-  });
-
-  if (pkgs.length === 0){
-    const tr = document.createElement("tr");
-    const td = document.createElement("td"); td.className = "linecell"; td.textContent = "No packages with lease rent data match the current filters.";
-    tr.appendChild(td); body.appendChild(tr);
-  } else if (pkgs.length > 1){
-    const totalSurplus = totalEbidar - totalRent;
-    const tr = document.createElement("tr"); tr.className = "total-row";
-    const labelTd = document.createElement("td"); labelTd.className = "linecell"; labelTd.textContent = "Total"; tr.appendChild(labelTd);
-    const blankTd = document.createElement("td"); blankTd.textContent = "–"; tr.appendChild(blankTd);
-    const annualTd = document.createElement("td"); annualTd.textContent = fmtMoney(totalRent); tr.appendChild(annualTd);
-    const ebidarTd = document.createElement("td"); ebidarTd.textContent = anyData ? fmtMoney(totalEbidar) : "–"; tr.appendChild(ebidarTd);
-    const surplusTd = document.createElement("td");
-    surplusTd.textContent = anyData ? fmtMoney(totalSurplus) : "–";
-    if (anyData) surplusTd.classList.add(totalSurplus >= 0 ? "pos" : "neg");
-    tr.appendChild(surplusTd);
-    const statusTd = document.createElement("td");
-    statusTd.textContent = anyData ? (totalSurplus >= 0 ? "✓ Met" : "✗ Breach") : "–";
-    if (anyData) statusTd.classList.add(totalSurplus >= 0 ? "pos" : "neg");
-    tr.appendChild(statusTd);
-    body.appendChild(tr);
-  }
-
-  document.getElementById("statRent").textContent = fmtMoney(totalRent);
-  if (!anyData || pkgs.length === 0){
-    document.getElementById("statCovEbidar").textContent = "–";
-    document.getElementById("statCovSurplus").textContent = "–";
-    document.getElementById("statCovStatus").textContent = "–";
+// A single collective total vs. target per landlord -- no per-manager or
+// per-package breakdown, since the lease covenant isn't evaluated that
+// way (an individual operator's own number doesn't matter to CareTrust,
+// only the combined total does).
+function renderCovenantSections(){
+  const container = document.getElementById("covenantSections");
+  container.innerHTML = "";
+  if (DATA.landlord_rents.length === 0){
+    container.innerHTML = '<div class="section"><p class="filter-hint" style="padding-left:0;">No lease rent data on file yet.</p></div>';
     return;
   }
-  document.getElementById("statCovEbidar").textContent = fmtMoney(totalEbidar);
-  document.getElementById("statCovEbidarFoot").textContent = "rolling T12, per package";
-  const totalSurplus = totalEbidar - totalRent;
-  const surplusEl = document.getElementById("statCovSurplus");
-  surplusEl.textContent = fmtMoney(totalSurplus);
-  surplusEl.className = "stat-value " + (totalSurplus >= 0 ? "good" : "bad");
-  const statusEl = document.getElementById("statCovStatus");
-  statusEl.textContent = totalSurplus >= 0 ? "✓ Met" : "✗ Breach";
-  statusEl.className = "stat-value " + (totalSurplus >= 0 ? "good" : "bad");
+  DATA.landlord_rents.forEach(lr => {
+    const {sum, months, annualRent, required, surplus} = landlordCovenantTest(lr);
+    const met = surplus >= 0;
+    const section = document.createElement("div");
+    section.className = "section";
+    section.innerHTML =
+      '<div class="section-head"><h2>Lease Covenant Test &mdash; ' + lr.landlord + '</h2>' +
+      '<span class="section-note">Rolling T12 Covenant Income (EBIDAR), all ' + lr.facility_ids.length + ' facilities combined, vs. ' + MIN_COVERAGE_RATIO.toFixed(1) + '&times; the rent ' + lr.landlord + ' pays CareTrust &mdash; always trailing 12 months</span></div>' +
+      '<div class="stat-strip">' +
+        '<div class="stat-card"><span class="stat-label">Monthly rent to CareTrust</span><span class="stat-value">' + fmtMoney(lr.monthly_rent) + '</span><span class="stat-foot">on file</span></div>' +
+        '<div class="stat-card"><span class="stat-label">Annual rent</span><span class="stat-value">' + fmtMoney(annualRent) + '</span><span class="stat-foot">12 &times; monthly rent</span></div>' +
+        '<div class="stat-card"><span class="stat-label">Required covenant income</span><span class="stat-value">' + fmtMoney(required) + '</span><span class="stat-foot">' + MIN_COVERAGE_RATIO.toFixed(1) + '&times; annual rent</span></div>' +
+        '<div class="stat-card"><span class="stat-label">T12 covenant income</span><span class="stat-value">' + (months > 0 ? fmtMoney(sum) : "–") + '</span><span class="stat-foot">' + (months < 12 ? "only " + months + " month" + (months===1?"":"s") + " of data" : "actual, rolling T12") + '</span></div>' +
+        '<div class="stat-card"><span class="stat-label">Surplus / (shortfall)</span><span class="stat-value ' + (met ? "good" : "bad") + '">' + (months > 0 ? fmtMoney(surplus) : "–") + '</span><span class="stat-foot">vs. required</span></div>' +
+        '<div class="stat-card"><span class="stat-label">Covenant Status</span><span class="stat-value ' + (met ? "good" : "bad") + '">' + (months > 0 ? (met ? "✓ Met" : "✗ Breach") : "–") + '</span><span class="stat-foot">a breach triggers a lease penalty</span></div>' +
+      '</div>' +
+      '<div class="penalty-note">&#9888;&#65039; This is a collective measure across every facility ' + lr.landlord + ' operates &mdash; not any one manager or package. A "Breach" means rolling T12 covenant income fell short of ' + MIN_COVERAGE_RATIO.toFixed(1) + '&times; the annual rent ' + lr.landlord + ' itself pays CareTrust (not what it collects from operators), which triggers a financial penalty under the lease.</div>';
+    container.appendChild(section);
+  });
 }
 
 const FACILITY_OPTIONS = DATA.facilities.slice().sort((a,b) => a.name.localeCompare(b.name)).map(f => ({value: f.facility_id, label: f.name}));
@@ -702,7 +613,6 @@ function refreshAll(){
   renderAll();
 }
 function renderAll(){
-  renderCovenant(rentedPackagesInScope());
   const pkgs = packagesInScope();
   const periods = periodsInRange();
   renderCards(pkgs, periods);
@@ -717,6 +627,7 @@ document.getElementById("rateSlider").oninput = (e) => {
   renderAll();
 };
 
+renderCovenantSections();
 populateMonthPickers();
 refreshAll();
 </script>

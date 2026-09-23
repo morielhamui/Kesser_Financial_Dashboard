@@ -32,15 +32,6 @@ for row in conn.execute("""
         "landlord_id": row["landlord_id"],
     }
 
-# --- monthly lease rent, keyed by (landlord_id, brand) -- migration 008.
-# Separate from purchase price: "Covenant" (rent coverage, penalty-bearing
-# per the lease) and "Cap Rate Supportable" (purchase-option affordability)
-# are two distinct tests in the real underwriting model and must not be
-# combined into one number. See PROJECT_RULES.md section 9a.
-rents = {}
-for row in conn.execute("SELECT landlord_id, brand, monthly_rent FROM fact_lease_rent"):
-    rents[(row["landlord_id"], row["brand"])] = row["monthly_rent"]
-
 # --- purchase price packages, keyed by (landlord_id, brand) ---
 packages = []
 package_facility_ids = {}  # (landlord_id, brand) -> [facility_id, ...]
@@ -52,20 +43,22 @@ for row in conn.execute("SELECT landlord_id, brand, purchase_price FROM fact_pur
     packages.append({
         "landlord_id": row["landlord_id"], "landlord": landlord_name, "brand": row["brand"],
         "purchase_price": row["purchase_price"], "facility_ids": fac_ids,
-        "monthly_rent": rents.get(key),
     })
 
-# Packages with rent but no purchase price on file yet still need to appear
-# in the Covenant test (Purchase Price and Covenant are unrelated tests) --
-# add them if fact_lease_rent has a package fact_purchase_price doesn't.
-for (landlord_id, brand), monthly_rent in rents.items():
-    if any(p["landlord_id"] == landlord_id and p["brand"] == brand for p in packages):
-        continue
-    fac_ids = [fid for fid, f in facilities.items() if f["landlord_id"] == landlord_id and f["manager"] == brand]
-    landlord_name = next((f["landlord"] for f in facilities.values() if f["landlord_id"] == landlord_id), "Unknown")
-    packages.append({
-        "landlord_id": landlord_id, "landlord": landlord_name, "brand": brand,
-        "purchase_price": None, "facility_ids": fac_ids, "monthly_rent": monthly_rent,
+# --- lease rent, landlord-level (migration 009) -- a COLLECTIVE test: the
+# lease covenant sums Covenant Income (EBIDAR) across ALL of a landlord's
+# operator brands and compares it to the ONE rent that landlord itself
+# pays its own upstream owner (e.g. Petersen SNF -> CareTrust), NOT what
+# it collects from its operators. Separate from purchase price -- "Lease
+# Covenant" and "Cap Rate Supportable" are two distinct tests and must
+# never be combined into one number. See PROJECT_RULES.md section 9a.
+landlord_rents = []
+for row in conn.execute("SELECT landlord_id, monthly_rent FROM fact_lease_rent"):
+    fac_ids = [fid for fid, f in facilities.items() if f["landlord_id"] == row["landlord_id"]]
+    landlord_name = next((f["landlord"] for f in facilities.values() if f["landlord_id"] == row["landlord_id"]), "Unknown")
+    landlord_rents.append({
+        "landlord_id": row["landlord_id"], "landlord": landlord_name,
+        "monthly_rent": row["monthly_rent"], "facility_ids": fac_ids,
     })
 
 # --- EBIDARM (and NOI, operating revenue) per facility/period, straight
@@ -88,11 +81,12 @@ for row in conn.execute("SELECT facility_id, period_date, ebidarm, noi, operatin
 out = {
     "facilities": list(facilities.values()),
     "packages": packages,
+    "landlord_rents": landlord_rents,
     "rows": rows,
 }
 out_path = OUT_DIR / "covenant_data.json"
 with open(out_path, "w") as f:
     json.dump(out, f, separators=(",", ":"))
 
-print(f"facilities={len(facilities)} packages={len(packages)} rows={len(rows)}")
+print(f"facilities={len(facilities)} packages={len(packages)} landlord_rents={len(landlord_rents)} rows={len(rows)}")
 print("size:", out_path.stat().st_size / 1024, "KB")

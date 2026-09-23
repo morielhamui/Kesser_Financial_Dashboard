@@ -515,39 +515,60 @@ convention that it's easy to assume, but the actual percentage and
 formula need the real source, not an assumption.**
 
 **"Covenant" and "Cap Rate Supportable" are two separate tests, not one
-metric shown twice (confirmed 2026-09-23 from a screenshot of the real
+metric shown twice** (confirmed 2026-09-23 from a screenshot of the real
 Power BI report, which has three visuals: a monthly "CTR Covenant
 Income" table, a T12 "EBIDAR" table, and the purchase-price/cap-rate
 table — the underlying per-period $ figure is the same EBIDAR formula
 above in all three, confirmed by exact numeric matches against this
 project's own database wherever the source data hadn't since been
-revised; what differs is what each is compared against):**
+revised; what differs is what each is compared against):
 
 ```
-Lease Covenant Test   : rolling T12 EBIDAR vs. Annual Rent
-                        (Annual Rent = 12 × monthly rent) — ALWAYS a
-                        trailing-12-month window per the lease, never
-                        the report's arbitrary date-range filter.
-                        A shortfall ("Breach") triggers a financial
-                        penalty under the Petersen SNF lease.
-Cap Rate Supportable  : EBIDAR (for whatever period is selected,
-                        annualized) vs. Purchase Price × target cap
-                        rate — a purchase-option affordability test,
-                        unrelated to the lease covenant. Can legitimately
-                        be viewed over T3, T12, or any custom range.
+Lease Covenant Test   : a COLLECTIVE, landlord-level test, not per-
+                        manager or per-package — rolling T12 Covenant
+                        Income (EBIDAR) summed across EVERY facility a
+                        landlord operates, vs. 1.2× the Annual Rent
+                        (12 × monthly rent) that landlord ITSELF pays
+                        its own upstream owner. ALWAYS a trailing-
+                        12-month window per the lease, never the
+                        report's date-range filter, and unaffected by
+                        the Manager/Landlord/Facility filter chips
+                        (those scope Cap Rate Supportable only). A
+                        shortfall ("Breach") triggers a financial
+                        penalty under the lease.
+Cap Rate Supportable  : per (landlord, brand) package — EBIDAR (for
+                        whatever period is selected, annualized) vs.
+                        Purchase Price × target cap rate — a purchase-
+                        option affordability test, unrelated to the
+                        lease covenant. Can legitimately be viewed over
+                        T3, T12, or any custom range, and per package.
 ```
 
 A package can pass one test and fail the other — they must never be
-merged into a single "coverage" number. Monthly rent per (landlord,
-brand) package is in `fact_lease_rent` (migration 008, loaded by
+merged into a single "coverage" number, and the Lease Covenant total is
+never broken out per manager (the user explicitly doesn't want a
+per-operator pass/fail — only the collective total vs. target).
+
+**Lease Covenant rent basis — do not confuse the two rent streams**
+(this was gotten wrong once, 2026-09-23, and corrected same day): the
+covenant is against the rent Petersen SNF itself pays ITS OWN owner,
+CareTrust (a REIT) — **not** the larger "Rent credit" figure Petersen
+SNF collects from its own operator brands (that's Petersen's own
+revenue/spread, a completely different, larger number: $879,830.82/mo
+collected vs. $810,333.28/mo paid to CareTrust — the ~$69K/mo
+difference is Petersen's own margin). `fact_lease_rent` (migration 009;
+008's per-(landlord,brand) grain was wrong and got dropped) holds ONE
+row per landlord: `(landlord_id, monthly_rent)`. Loaded by
 `db/seed/load_lease_rent.py` from `data/reference/
 portfolio_spread_and_mid_month_bank_balances.xlsx`'s "Portfolio Spread"
-sheet, "Petersen SNF Facilities" section) — currently the same 8
-Petersen SNF manager packages as `fact_purchase_price`; the loader
-cross-checks its parsed total against that sheet's own "Total rent
-credit from all Petersen SNF facilities" cell ($879,830.82/mo) so a
-layout change in the source file fails loudly rather than silently
-loading wrong rents.
+sheet, structurally finding the "Total rent being paid to Caretrust"
+label (the value sits one row below and one column right of the label
+in this manually laid-out sheet) rather than the "Rent credit" rows
+above it. Currently just Petersen SNF ($810,333.28/mo, i.e.
+$9,723,999.36/yr); as of 2026-09-23 the whole Petersen SNF portfolio
+(43 active facilities) sits at a T12 Covenant Income of $10,657,255
+against a required $11,668,799 (1.2× annual rent) — a **Breach**
+of roughly $1.01M, even collectively across all 8 manager brands.
 
 ## 10a. Known Data Gaps (as of initial load)
 
@@ -557,6 +578,11 @@ validate 100% (1,856 facility-periods, 0 failures) as of this writing.
 
 - **Aliya**: no raw files for Glenwood/Palatine's sibling facilities —
   only 2 of Aliya's facilities have any data at all.
+- **Evercare Edwardsville and Evercare University**: sold off (per the
+  user, 2026-09-23) — marked `dim_facility.is_active = 0` rather than
+  deleted, so every dashboard page's `WHERE is_active = 1` filter
+  excludes them automatically without losing their historical rows.
+  Portfolio facility counts dropped from 55 to 53 active on this date.
 - **Lincoln**: census gap filled 2026-09-22 via `Lincoln_final_census.xlsx`
   (an interim, manually-consolidated Facility/Payor/Date/Days export
   covering Jan 2025–Apr 2026, loaded by

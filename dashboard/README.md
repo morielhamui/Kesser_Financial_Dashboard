@@ -61,11 +61,15 @@ in place rather than creating a new one.
   real underwriting model's own measures -- see PROJECT_RULES.md section
   9a for why this materially differs from just using EBIDARM), tracked
   independently since a package can pass one and fail the other:
-  - **Lease Covenant Test** -- rolling T12 EBIDAR vs. Annual Rent
-    (`fact_lease_rent`, migration 008, currently the 8 Petersen SNF
-    manager packages), always a trailing-12-month window per the lease
-    regardless of the page's date filter; a shortfall ("Breach")
-    triggers a financial penalty under the lease.
+  - **Lease Covenant Test** -- a collective, landlord-level test (not
+    per-manager or per-package): rolling T12 Covenant Income summed
+    across every facility a landlord operates, vs. 1.2x the Annual Rent
+    that landlord itself pays its own upstream owner (`fact_lease_rent`,
+    migration 009 -- currently just Petersen SNF's rent to CareTrust,
+    not the larger figure Petersen SNF collects from its own operators,
+    a different number entirely). Always a trailing-12-month window per
+    the lease, unaffected by the page's filters or date range; a
+    shortfall ("Breach") triggers a financial penalty under the lease.
   - **Cap Rate Supportable** -- EBIDAR against the purchase option price
     (`fact_purchase_price`, migration 007, the same 8 packages plus one
     individually-owned property), for whatever date range is selected.
