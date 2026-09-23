@@ -125,6 +125,33 @@ tbody td.linecell .pkg-sub{display:block; font-size:11px; color:var(--muted); fo
 .penalty-note{background:var(--warn-soft); border:1px solid var(--warn); border-radius:10px; padding:10px 14px; font-size:12.5px; color:var(--ink-soft); display:flex; gap:8px; align-items:flex-start;}
 
 .footnote{font-size:11.5px; color:var(--muted); line-height:1.5; padding:2px 4px;}
+
+.stat-value.clickable{cursor:pointer; text-decoration:underline dotted; text-underline-offset:5px; text-decoration-color:var(--border-strong);}
+.stat-value.clickable:hover{text-decoration-color:var(--accent);}
+
+.drill-backdrop{
+  position:fixed; inset:0; background:rgba(20,28,26,.45); display:flex;
+  align-items:center; justify-content:center; padding:20px; z-index:50;
+}
+.drill-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  box-shadow:var(--shadow); max-width:480px; width:100%; max-height:82vh;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.drill-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 18px 12px; border-bottom:1px solid var(--border);}
+.drill-title{font-family:"Fraunces",serif; font-size:16px; font-weight:600; color:var(--ink);}
+.drill-sub{font-size:12px; color:var(--muted); margin-top:2px;}
+.drill-close{background:none; border:none; font-size:18px; line-height:1; color:var(--muted); cursor:pointer; padding:2px 4px;}
+.drill-close:hover{color:var(--ink);}
+.drill-body{overflow-y:auto; padding:4px 0 6px;}
+.drill-section-head{font-size:10.5px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); padding:12px 18px 6px;}
+.drill-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 18px; font-size:13px; border-bottom:1px solid var(--border);}
+.drill-row:last-child{border-bottom:none;}
+.drill-row .name{color:var(--ink); font-weight:500;}
+.drill-row .amt{font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; color:var(--ink-soft); white-space:nowrap;}
+.drill-row .amt.neg{color:var(--bad);}
+.drill-row.total{background:var(--surface-2); font-weight:700;}
+.drill-row.total .amt{color:var(--ink); font-weight:700;}
 </style>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -243,7 +270,20 @@ tbody td.linecell .pkg-sub{display:block; font-size:11px; color:var(--muted); fo
     </div>
   </div>
 
-  <p class="footnote">EBIDAR = EBIDARM &minus; 5% of Operating Revenue (a normalized management-fee add-back standing in for the operator's actual reported management fee) &mdash; the same EBIDAR feeds both tests, compared against two different benchmarks. <strong>Lease Covenant</strong>: a collective measure, not a per-manager or per-package one &mdash; rolling T12 Covenant Income summed across every facility a landlord operates, vs. 1.2&times; the Annual Rent that landlord itself pays its own upstream owner (`fact_lease_rent`, migration 009, currently just Petersen SNF's rent to CareTrust, $810,333.28/mo &mdash; NOT the larger figure Petersen SNF collects from its own operators, a different number entirely). Always the trailing 12 months per the lease, regardless of the filters or month-range above; a shortfall ("Breach") triggers a financial penalty under the lease. <strong>Cap Rate Supportable</strong>: EBIDAR by package for the selected months, annualized (&times; 12 &divide; number of months with data), vs. Purchase Price &times; the target cap rate slider &mdash; a purchase-option affordability test, unrelated to the lease covenant. Purchase prices are package-level, not per-facility &mdash; e.g. all 7 Arcadia facilities under the Petersen SNF master lease were bought as one package with one price, so EBIDAR for every facility in a package is summed before comparing to that package's price. Only the Petersen SNF packages (all 8 manager brands) and 1155 N First St/Evercare have a purchase price on file; the ~11 other individually-owned properties show "no purchase price data" rather than a guessed figure. See PROJECT_RULES.md section 9a for the landlord/master-lease structure this reflects.</p>
+  <p class="footnote">EBIDAR = EBIDARM &minus; 5% of Operating Revenue (a normalized management-fee add-back standing in for the operator's actual reported management fee) &mdash; the same EBIDAR feeds both tests, compared against two different benchmarks. <strong>Lease Covenant</strong>: a collective measure, not a per-manager or per-package one &mdash; rolling T12 Covenant Income summed across every facility a landlord operates, vs. 1.2&times; the Annual Rent that landlord itself pays its own upstream owner (`fact_lease_rent`, migration 009, currently just Petersen SNF's rent to CareTrust, $810,333.28/mo &mdash; NOT the larger figure Petersen SNF collects from its own operators, a different number entirely). Always the trailing 12 months per the lease, regardless of the filters or month-range above; a shortfall ("Breach") triggers a financial penalty under the lease. Click the T12 covenant income figure to see the month-by-month and by-manager detail behind it. <strong>Cap Rate Supportable</strong>: EBIDAR by package for the selected months, annualized (&times; 12 &divide; number of months with data), vs. Purchase Price &times; the target cap rate slider &mdash; a purchase-option affordability test, unrelated to the lease covenant. Purchase prices are package-level, not per-facility &mdash; e.g. all 7 Arcadia facilities under the Petersen SNF master lease were bought as one package with one price, so EBIDAR for every facility in a package is summed before comparing to that package's price. Only the Petersen SNF packages (all 8 manager brands) and 1155 N First St/Evercare have a purchase price on file; the ~11 other individually-owned properties show "no purchase price data" rather than a guessed figure. See PROJECT_RULES.md section 9a for the landlord/master-lease structure this reflects.</p>
+</div>
+
+<div class="drill-backdrop" id="drillBackdrop" hidden>
+  <div class="drill-card" role="dialog" aria-modal="true">
+    <div class="drill-head">
+      <div>
+        <div class="drill-title" id="drillTitle">&nbsp;</div>
+        <div class="drill-sub" id="drillSub">&nbsp;</div>
+      </div>
+      <button class="drill-close" id="drillClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="drill-body" id="drillBody"></div>
+  </div>
 </div>
 
 <script>
@@ -587,7 +627,7 @@ function renderCovenantSections(){
         '<div class="stat-card"><span class="stat-label">Monthly rent to CareTrust</span><span class="stat-value">' + fmtMoney(lr.monthly_rent) + '</span><span class="stat-foot">on file</span></div>' +
         '<div class="stat-card"><span class="stat-label">Annual rent</span><span class="stat-value">' + fmtMoney(annualRent) + '</span><span class="stat-foot">12 &times; monthly rent</span></div>' +
         '<div class="stat-card"><span class="stat-label">Required covenant income</span><span class="stat-value">' + fmtMoney(required) + '</span><span class="stat-foot">' + MIN_COVERAGE_RATIO.toFixed(1) + '&times; annual rent</span></div>' +
-        '<div class="stat-card"><span class="stat-label">T12 covenant income</span><span class="stat-value">' + (months > 0 ? fmtMoney(sum) : "–") + '</span><span class="stat-foot">' + (months < 12 ? "only " + months + " month" + (months===1?"":"s") + " of data" : "actual, rolling T12") + '</span></div>' +
+        '<div class="stat-card"><span class="stat-label">T12 covenant income</span><span class="stat-value' + (months > 0 ? ' clickable" onclick="openCovenantDrill(' + lr.landlord_id + ')' : '') + '">' + (months > 0 ? fmtMoney(sum) : "–") + '</span><span class="stat-foot">' + (months < 12 ? "only " + months + " month" + (months===1?"":"s") + " of data" : "actual, rolling T12 — click for detail") + '</span></div>' +
         '<div class="stat-card"><span class="stat-label">Surplus / (shortfall)</span><span class="stat-value ' + (met ? "good" : "bad") + '">' + (months > 0 ? fmtMoney(surplus) : "–") + '</span><span class="stat-foot">vs. required</span></div>' +
         '<div class="stat-card"><span class="stat-label">Covenant Status</span><span class="stat-value ' + (met ? "good" : "bad") + '">' + (months > 0 ? (met ? "✓ Met" : "✗ Breach") : "–") + '</span><span class="stat-foot">a breach triggers a lease penalty</span></div>' +
       '</div>' +
@@ -595,6 +635,73 @@ function renderCovenantSections(){
     container.appendChild(section);
   });
 }
+
+// Verification detail for the T12 covenant income total ONLY -- by month
+// and by manager, both summing to the same headline figure. No per-
+// manager pass/fail here (the covenant itself is collective, not
+// per-operator); this is purely for tracing the number, not a second
+// compliance check.
+function openCovenantDrill(landlordId){
+  const lr = DATA.landlord_rents.find(x => x.landlord_id === landlordId);
+  if (!lr) return;
+  const facIds = lr.facility_ids;
+  const avail = Array.from(new Set(DATA.rows.filter(r => facIds.includes(r.facility_id)).map(r => r.period))).sort();
+  const t12 = avail.slice(-12);
+
+  const byPeriod = t12.map(p => {
+    let v = 0;
+    facIds.forEach(fid => { const row = ROW_BY_KEY[fid + "|" + p]; if (row) v += ebidarFor(row); });
+    return {label: window.fmtMonth ? window.fmtMonth(p) : p, amount: v};
+  });
+
+  const managerOf = {};
+  DATA.facilities.forEach(f => { managerOf[f.facility_id] = f.manager; });
+  const byManagerMap = {};
+  facIds.forEach(fid => {
+    const mgr = managerOf[fid] || "Unknown";
+    t12.forEach(p => {
+      const row = ROW_BY_KEY[fid + "|" + p];
+      if (row) byManagerMap[mgr] = (byManagerMap[mgr] || 0) + ebidarFor(row);
+    });
+  });
+  const byManager = Object.entries(byManagerMap).sort((a, b) => b[1] - a[1]);
+
+  const total = byPeriod.reduce((s, x) => s + x.amount, 0);
+
+  document.getElementById("drillTitle").textContent = "T12 Covenant Income — " + lr.landlord;
+  document.getElementById("drillSub").textContent = (t12.length ? byPeriod[0].label + " – " + byPeriod[byPeriod.length - 1].label : "no data") + " · " + facIds.length + " facilities";
+
+  const bodyEl = document.getElementById("drillBody");
+  bodyEl.innerHTML = "";
+
+  const monthHead = document.createElement("div"); monthHead.className = "drill-section-head"; monthHead.textContent = "By Month";
+  bodyEl.appendChild(monthHead);
+  byPeriod.forEach(({label, amount}) => {
+    const row = document.createElement("div"); row.className = "drill-row";
+    row.innerHTML = '<div class="name">' + label + '</div><div class="amt' + (amount < 0 ? " neg" : "") + '">' + fmtMoney(amount) + '</div>';
+    bodyEl.appendChild(row);
+  });
+  const monthTotal = document.createElement("div"); monthTotal.className = "drill-row total";
+  monthTotal.innerHTML = '<div>Total (T12)</div><div class="amt">' + fmtMoney(total) + '</div>';
+  bodyEl.appendChild(monthTotal);
+
+  const mgrHead = document.createElement("div"); mgrHead.className = "drill-section-head"; mgrHead.textContent = "By Manager";
+  bodyEl.appendChild(mgrHead);
+  byManager.forEach(([mgr, amount]) => {
+    const row = document.createElement("div"); row.className = "drill-row";
+    row.innerHTML = '<div class="name">' + mgr + '</div><div class="amt' + (amount < 0 ? " neg" : "") + '">' + fmtMoney(amount) + '</div>';
+    bodyEl.appendChild(row);
+  });
+  const mgrTotal = document.createElement("div"); mgrTotal.className = "drill-row total";
+  mgrTotal.innerHTML = '<div>Total (T12)</div><div class="amt">' + fmtMoney(total) + '</div>';
+  bodyEl.appendChild(mgrTotal);
+
+  document.getElementById("drillBackdrop").hidden = false;
+}
+function closeDrill(){ document.getElementById("drillBackdrop").hidden = true; }
+document.getElementById("drillClose").onclick = closeDrill;
+document.getElementById("drillBackdrop").onclick = (e) => { if (e.target.id === "drillBackdrop") closeDrill(); };
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrill(); });
 
 const FACILITY_OPTIONS = DATA.facilities.slice().sort((a,b) => a.name.localeCompare(b.name)).map(f => ({value: f.facility_id, label: f.name}));
 const MANAGER_OPTIONS = MANAGERS.map(m => ({value: m, label: m}));
