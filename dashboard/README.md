@@ -56,19 +56,27 @@ in place rather than creating a new one.
   sourced the same way `hfs_building_id` was (migration 005): a column
   that was already in `facility_listing.xlsx` but never persisted.
 - **Covenant & EBIDAR** (`export_covenant.py` / `build_covenant.py`) --
-  EBIDAR coverage against purchase price, by landlord/manager package
-  (`fact_purchase_price`, migration 007) -- currently the Petersen SNF
-  master lease's 8 manager-brand packages plus one individually-owned
-  property. EBIDAR = EBIDARM minus a normalized 5%-of-Operating-Revenue
-  management-fee add-back (confirmed against the real underwriting
-  model's own measures, not the operator's actual reported management
-  fee) -- see PROJECT_RULES.md section 9a for the exact formula and why
-  it materially differs from just using EBIDARM. An adjustable
-  target-cap-rate slider (default 13%) drives the headline Required
-  EBIDAR / surplus-shortfall figures and a "Supported"/"Shortfall"
-  status badge, alongside a fixed 10-13% sensitivity table. Package
-  groups with no purchase price on file are listed, not hidden, so a
-  gap in coverage stays visible.
+  two separate tests on the same EBIDAR (EBIDARM minus a normalized
+  5%-of-Operating-Revenue management-fee add-back, confirmed against the
+  real underwriting model's own measures -- see PROJECT_RULES.md section
+  9a for why this materially differs from just using EBIDARM), tracked
+  independently since a package can pass one and fail the other:
+  - **Lease Covenant Test** -- rolling T12 EBIDAR vs. Annual Rent
+    (`fact_lease_rent`, migration 008, currently the 8 Petersen SNF
+    manager packages), always a trailing-12-month window per the lease
+    regardless of the page's date filter; a shortfall ("Breach")
+    triggers a financial penalty under the lease.
+  - **Cap Rate Supportable** -- EBIDAR against the purchase option price
+    (`fact_purchase_price`, migration 007, the same 8 packages plus one
+    individually-owned property), for whatever date range is selected.
+    An adjustable target-cap-rate slider (default 13%) drives the
+    headline Required EBIDAR / surplus-shortfall figures and a
+    "Supported"/"Shortfall" status badge, alongside a fixed 10-13%
+    sensitivity table.
+
+  Package groups with no purchase price or no rent on file are listed
+  (or simply absent from that test), not hidden behind a guessed figure,
+  so a gap in coverage stays visible.
 - **T12 by Facility** (`export_t12_facility.py` / `build_t12_facility.py`)
   -- a benchmarking view: pick a landlord to scope the field, choose
   whether to compare by manager or by individual facility, then select

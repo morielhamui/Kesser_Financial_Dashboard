@@ -514,6 +514,41 @@ definition — a normalized management-fee add-back is a common enough
 convention that it's easy to assume, but the actual percentage and
 formula need the real source, not an assumption.**
 
+**"Covenant" and "Cap Rate Supportable" are two separate tests, not one
+metric shown twice (confirmed 2026-09-23 from a screenshot of the real
+Power BI report, which has three visuals: a monthly "CTR Covenant
+Income" table, a T12 "EBIDAR" table, and the purchase-price/cap-rate
+table — the underlying per-period $ figure is the same EBIDAR formula
+above in all three, confirmed by exact numeric matches against this
+project's own database wherever the source data hadn't since been
+revised; what differs is what each is compared against):**
+
+```
+Lease Covenant Test   : rolling T12 EBIDAR vs. Annual Rent
+                        (Annual Rent = 12 × monthly rent) — ALWAYS a
+                        trailing-12-month window per the lease, never
+                        the report's arbitrary date-range filter.
+                        A shortfall ("Breach") triggers a financial
+                        penalty under the Petersen SNF lease.
+Cap Rate Supportable  : EBIDAR (for whatever period is selected,
+                        annualized) vs. Purchase Price × target cap
+                        rate — a purchase-option affordability test,
+                        unrelated to the lease covenant. Can legitimately
+                        be viewed over T3, T12, or any custom range.
+```
+
+A package can pass one test and fail the other — they must never be
+merged into a single "coverage" number. Monthly rent per (landlord,
+brand) package is in `fact_lease_rent` (migration 008, loaded by
+`db/seed/load_lease_rent.py` from `data/reference/
+portfolio_spread_and_mid_month_bank_balances.xlsx`'s "Portfolio Spread"
+sheet, "Petersen SNF Facilities" section) — currently the same 8
+Petersen SNF manager packages as `fact_purchase_price`; the loader
+cross-checks its parsed total against that sheet's own "Total rent
+credit from all Petersen SNF facilities" cell ($879,830.82/mo) so a
+layout change in the source file fails loudly rather than silently
+loading wrong rents.
+
 ## 10a. Known Data Gaps (as of initial load)
 
 Tracked so they aren't mistaken for load failures — every one of these is
