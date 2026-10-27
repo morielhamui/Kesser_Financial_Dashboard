@@ -258,6 +258,27 @@ NOI                              = Earnings + Other Income/Expense
 
 ## 8. Known Past Bugs — Do Not Reintroduce
 
+- **`scripts/load_all.py` without `--fresh` double-counts previously-loaded
+  files** (found 2026-10-27 while loading June-August 2026 data):
+  `parsers/common.py`'s `insert_financial_fact()` uses an additive
+  `ON CONFLICT(facility_id, period_date, mapping_id, source_file) DO UPDATE
+  SET amount = fact_tenant_financials.amount + excluded.amount` by design,
+  to correctly sum a raw label that appears twice in one file under
+  different subgroups mapping to the same `mapping_id`. This is NOT
+  idempotent across repeated pipeline runs: running `scripts/load_all.py`
+  without `--fresh` on a database that already has files loaded re-parses
+  every already-loaded file and additively merges its amounts into
+  themselves, silently doubling every previously-loaded financial figure.
+  Symptom: the validation gate drops from ~100% pass to near-0% pass, with
+  every recomputed Net Income ≈ 2× the reported value. **Lesson: once any
+  files have been loaded in a prior session, always run
+  `python3 scripts/load_all.py --fresh` for a full rebuild (deletes the DB,
+  reapplies all migrations, reloads everything from scratch in one pass) —
+  never the bare non-`--fresh` form. `--fresh` does NOT replay
+  `load_hfs_rates.py`, `load_purchase_prices.py`, or `load_lease_rent.py`
+  (standalone reference-data loaders) or the Evercare
+  Edwardsville/University `is_active=0` exclusion — all of these must be
+  re-run by hand immediately afterward.**
 - **Lineage mapping file**: had two columns both named `Merged.2`
   (duplicate column name) → caused phantom mapping errors. Always
   de-duplicate/validate column headers on load, don't assume uniqueness.
@@ -574,7 +595,24 @@ of roughly $1.01M, even collectively across all 8 manager brands.
 
 Tracked so they aren't mistaken for load failures — every one of these is
 an absence of source data, not a parsing bug. All 7 operators otherwise
-validate 100% (1,856 facility-periods, 0 failures) as of this writing.
+validate 100% as of this writing (2,179 facility-periods, 0 failures,
+confirmed after the 2026-10-27 rebuild described below).
+
+**Data coverage as of 2026-10-27**: latest period across all operators is
+2026-08-31, 938 rows in `fact_metrics_waterfall`, 53 active facilities.
+June-August 2026 was loaded this date for Curis, Evercare, Extendicare,
+Lincoln, and Lineage (22 new raw files; see commit
+"Load June-August 2026 data across all operators"). Two gaps remain open
+from this load:
+- **Evercare**: Jul-Nov 2025 is still missing for the 4 Petersen SNF
+  Evercare facilities (Collinsville, Jerseyville, Lebanon, Swansea) — none
+  of the June-August 2026 uploads backfill this; it predates the window
+  those files cover. Surfaced during the Covenant Income reconciliation
+  with the user's Power BI numbers; still outstanding.
+- **Lineage**: no July 2026 file was ever provided for any of the 4
+  Lineage facilities with raw data (Irving Park, North Aurora, Sandwich,
+  South Elgin) — only June and August `.xlsm` files exist, so July 2026
+  is a one-month hole for this operator.
 
 - **Aliya**: no raw files for Glenwood/Palatine's sibling facilities —
   only 2 of Aliya's facilities have any data at all.
