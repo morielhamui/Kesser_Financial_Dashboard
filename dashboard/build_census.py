@@ -173,6 +173,7 @@ tr.sub td{color:var(--muted); font-size:12.5px;}
 .footnote{font-size:11.5px; color:var(--muted); line-height:1.5; padding:2px 4px;}
 
 .drill-backdrop{position:fixed; inset:0; background:rgba(20,28,26,.45); display:flex; align-items:center; justify-content:center; padding:20px; z-index:50;}
+.drill-backdrop[hidden]{display:none!important;}
 .drill-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); max-width:520px; width:100%; max-height:82vh; display:flex; flex-direction:column; overflow:hidden;}
 .drill-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:16px 18px 12px; border-bottom:1px solid var(--border);}
 .drill-title{font-family:"Fraunces",serif; font-size:16px; font-weight:600; color:var(--ink);}

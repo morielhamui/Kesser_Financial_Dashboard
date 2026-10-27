@@ -85,6 +85,7 @@ h1{font-size:clamp(24px,3.4vw,32px); font-weight:600; color:var(--ink);}
   position:fixed; inset:0; background:rgba(20,28,26,.45); display:flex;
   align-items:center; justify-content:center; padding:20px; z-index:50;
 }
+.drill-backdrop[hidden]{display:none!important;}
 .drill-card{
   background:var(--surface); border:1px solid var(--border); border-radius:14px;
   box-shadow:var(--shadow); max-width:480px; width:100%; max-height:80vh;
