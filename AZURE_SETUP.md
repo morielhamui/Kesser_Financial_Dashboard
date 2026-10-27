@@ -3,9 +3,14 @@
 This is a plain-language, step-by-step guide to creating the Azure
 resources this app needs. It deliberately mirrors the pattern already
 proven out by the Medicare Dashboard app (`jrobertsaperioncare/Medicare-Dashboard2`)
-but is **completely separate** from it — different resource group, different
-SQL server, different sign-in app registration, different deploy identity.
-Nothing here is shared with or connected to that app.
+but keeps Kesser's data and logins fully separate from it — a new,
+dedicated database (not the Medicare dashboard's), a new sign-in app
+registration, and a new deploy identity. The one thing it shares is the
+existing `aperion-care-sql` SQL *server* (reusing it is simpler to manage
+and you're on the same ownership anyway) — but a shared server is just a
+shared login endpoint; the actual data lives in a separate database that
+only Kesser's own identity can reach, so nothing about "same server" means
+shared data or shared logins.
 
 No step here requires coding. It's all clicking through the Azure Portal
 (portal.azure.com) plus a couple of copy-paste commands. Each step says who
@@ -37,10 +42,10 @@ company initials).
 
 | Resource | Proposed name |
 |---|---|
-| Resource Group | `kesser-dashboard-rg` |
+| Resource Group | `kesser-dashboard-rg` (for the new resources below; the database itself lives in whatever resource group `aperion-care-sql` is already in — `45-AZRGx`, per your screenshot) |
 | Region | Central US (matches your other app — keeps things close to your team/data) |
-| SQL Server | `kesser-financial-sql` |
-| SQL Database | `kesser-financial-db` |
+| SQL Server | `aperion-care-sql` (existing — reused, not new) |
+| SQL Database | `kesser-financial-db` (new database on that existing server) |
 | Function App | `kesser-dashboard-api` |
 | Static Web App | `kesser-financial-dashboard` |
 | Managed Identity (GitHub deploy) | `gh-deploy-kesser-dashboard` |
@@ -58,27 +63,34 @@ company initials).
 
 ---
 
-## Step 2 — Create the SQL Server + Database
+## Step 2 — Add a new database to the existing SQL server
+
+This reuses the existing `aperion-care-sql` server (same ownership, simpler
+to manage) but creates a brand-new, separate database on it — Kesser's data
+lives in its own database (`kesser-financial-db`), completely apart from
+the Medicare dashboard's `reimbursement-db`. In Step 5 below, Kesser's
+Function App gets its own identity that is granted access to *only*
+`kesser-financial-db` — it has no ability to see or touch `reimbursement-db`,
+and vice versa. Same server (same login endpoint), fully separate data and
+fully separate logins.
 
 1. Azure Portal → search "SQL databases" → **+ Create**
-2. Resource group: `kesser-dashboard-rg`
+2. Resource group: whichever one `aperion-care-sql` is already in (`45-AZRGx`
+   per your screenshot)
 3. Database name: `kesser-financial-db`
-4. Server: click "Create new"
-   - Server name: `kesser-financial-sql`
-   - Location: Central US
-   - Authentication method: choose **"Use only Microsoft Entra authentication"**
-     (this is important — it means no SQL password exists at all; only
-     Entra/Azure AD identities can log in, matching the Medicare dashboard's
-     no-stored-password approach)
-   - Set yourself (or your Azure admin) as the Entra admin for the server
+4. Server: select the **existing** `aperion-care-sql` server from the
+   dropdown (do not create a new one)
 5. Compute + storage: choose **Serverless** tier, smallest size (General
    Purpose, 1 vCore, auto-pause after 1 hour of inactivity) — this is the
    cheapest option and auto-pauses when nobody's using it, which fits a
    small internal dashboard well. You can scale it up later with no data
    loss if it's ever too slow.
-6. Networking: "Allow Azure services to access this server" = Yes (the
-   Function App needs to reach it)
-7. Review + Create
+6. Review + Create
+
+(No new server, no new authentication setup needed — `aperion-care-sql` is
+already configured for Entra-only authentication, since that's how the
+Medicare dashboard's Function App already connects to it with no stored
+password. The new database automatically uses the same setup.)
 
 ---
 
@@ -135,7 +147,7 @@ This step lets the Function App's Managed Identity (its "keycard" from Step
    ```
 3. Go to the Function App → **Configuration** → **Application settings** →
    add two new settings:
-   - `SQL_SERVER` = `kesser-financial-sql.database.windows.net`
+   - `SQL_SERVER` = `aperion-care-sql.database.windows.net`
    - `SQL_DATABASE` = `kesser-financial-db`
 4. Save (this restarts the Function App, which is expected)
 
