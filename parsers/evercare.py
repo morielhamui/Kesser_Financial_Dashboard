@@ -89,6 +89,57 @@ def find_period_date(ws) -> str:
     raise ValueError("Could not find a usable period date")
 
 
+def find_period_columns(ws) -> list[tuple[int, str]]:
+    """Returns [(value_column, period_date_iso), ...] for every "Month
+    Ending" column pair in the header, scanning ALL columns of the header
+    row rather than assuming a single column=2 layout.
+
+    2025-vintage "4 Pack" files are a trailing multi-month export -- one
+    "Month Ending" / date / Actual-PPD column pair per month (found
+    2026-10-28: a single such file, column B only, had been parsed as if
+    it covered just its anchor month via find_period_date's "As of Date:"
+    precedence, silently mislabeling column B's January data as the
+    file's December anchor date and never touching the other 11 months).
+    2026-vintage files are single-month (exactly one such pair, in column
+    B) -- this function returns a one-element list for them, unifying
+    both shapes under one code path.
+
+    A trailing "Period Ending" column (same anchor date repeated, found in
+    the 2025 format) is deliberately excluded: loading it as a second
+    occurrence of the same period_date from the same source_file would
+    double-count via insert_financial_fact's additive ON CONFLICT.
+    """
+    header_row = None
+    for r in range(1, min(15, ws.max_row) + 1):
+        for c in range(1, ws.max_column + 1):
+            v = ws.cell(row=r, column=c).value
+            if isinstance(v, str) and v.strip().lower() == "month ending":
+                header_row = r
+                break
+        if header_row is not None:
+            break
+    if header_row is None:
+        raise ValueError("Could not find a 'Month Ending' header row")
+
+    out: list[tuple[int, str]] = []
+    seen_periods: set[str] = set()
+    for c in range(1, ws.max_column + 1):
+        label = ws.cell(row=header_row, column=c).value
+        if not isinstance(label, str) or label.strip().lower() != "month ending":
+            continue
+        date_val = ws.cell(row=header_row + 1, column=c).value
+        if not date_val:
+            continue
+        period_iso = excel_date_to_iso(date_val)
+        if period_iso in seen_periods:
+            continue
+        seen_periods.add(period_iso)
+        out.append((c, period_iso))
+    if not out:
+        raise ValueError("Found a 'Month Ending' header row but no dated columns under it")
+    return out
+
+
 def _log_unmapped(conn, period_date, source_file, load_batch_id, raw_label):
     conn.execute(
         """
@@ -116,7 +167,7 @@ def _resolve_mapping(conn, master, operator_id, raw_label, fallback_statement_ty
     return mapping_id, sign
 
 
-def parse_and_load(conn, ws, facility_id, period_date, operator_id, master, source_file, load_batch_id):
+def parse_and_load(conn, ws, facility_id, period_date, operator_id, master, source_file, load_batch_id, value_col=2):
     stack: list[tuple[int, str]] = []
     net_income_row = None
     for r in range(1, ws.max_row + 1):
@@ -154,12 +205,12 @@ def parse_and_load(conn, ws, facility_id, period_date, operator_id, master, sour
             continue
 
         if r == net_income_row:
-            v = ws.cell(row=r, column=2).value
+            v = ws.cell(row=r, column=value_col).value
             if isinstance(v, (int, float)):
                 insert_reported_net_income(conn, facility_id, period_date, float(v), source_file, f"row{r}", load_batch_id)
             continue
 
-        has_value = isinstance(ws.cell(row=r, column=2).value, (int, float))
+        has_value = isinstance(ws.cell(row=r, column=value_col).value, (int, float))
 
         if not has_value:
             stack.append((indent, text))
@@ -168,7 +219,7 @@ def parse_and_load(conn, ws, facility_id, period_date, operator_id, master, sour
         # Leaf. Section is whatever top-level (depth-0-in-stack) wrapper
         # is open, however deep this leaf is nested beneath it.
         section = SECTION_ROUTES.get(stack[0][1].lower()) if stack else None
-        v = ws.cell(row=r, column=2).value
+        v = ws.cell(row=r, column=value_col).value
 
         if section == "census":
             payor = normalize_payor(text, OPERATOR_NAME, is_census=True)
@@ -222,18 +273,23 @@ def load_file(conn: sqlite3.Connection, path: str, operator_id: int, resolver: F
             print(f"  WARNING: could not resolve facility for sheet {sheet_name!r} in {source_file}")
             continue
         try:
-            load_batch_id = new_batch_id()
-            period_date = find_period_date(ws)
-            parse_and_load(conn, ws, facility_id, period_date, operator_id, master, source_file, load_batch_id)
-            conn.commit()
-            passed, recomputed, reported = validate_facility_period(conn, facility_id, period_date, source_file, load_batch_id)
-            conn.commit()
-            results.append({
-                "source_file": source_file, "sheet": sheet_name, "period_date": period_date,
-                "passed": passed, "recomputed": recomputed, "reported": reported,
-            })
+            period_columns = find_period_columns(ws)
         except Exception as e:
             print(f"  FAILED to parse sheet {sheet_name!r} in {source_file}: {e}")
+            continue
+        for value_col, period_date in period_columns:
+            try:
+                load_batch_id = new_batch_id()
+                parse_and_load(conn, ws, facility_id, period_date, operator_id, master, source_file, load_batch_id, value_col=value_col)
+                conn.commit()
+                passed, recomputed, reported = validate_facility_period(conn, facility_id, period_date, source_file, load_batch_id)
+                conn.commit()
+                results.append({
+                    "source_file": source_file, "sheet": sheet_name, "period_date": period_date,
+                    "passed": passed, "recomputed": recomputed, "reported": reported,
+                })
+            except Exception as e:
+                print(f"  FAILED to parse sheet {sheet_name!r} period {period_date} in {source_file}: {e}")
     return results
 
 

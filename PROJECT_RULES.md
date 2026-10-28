@@ -178,7 +178,33 @@ the source's reported Net Income to the dollar.
   this exact double-count. Our NOI matches the file's own reported Net
   Income exactly; Power BI's does not, until this is fixed on their side
   (change the Sub-Group off "Other Income / Expense", or point the measure
-  at Grouping instead).
+  at Grouping instead). User confirmed fixed 2026-10-28 (added
+  `KEEPFILTERS(Dim_Account[Grouping] <> "Operating Expense")` to the
+  measure) and verified Watseka ties exactly afterward.
+
+- **Power BI reconciliation trail (2026-10-28), for context on the T12
+  Covenant Income figure's history this date:** started at $11,445,109
+  (pre-fixes) → $11,797,783 (Prior Year Expenses/Adjustments fix) →
+  $13,418,980 (+ the 4-revenue-item fix) → **$14,122,953** (+ the Evercare
+  parser fix above), required $11,668,799, final surplus **$2,454,154**.
+  Reconciling manager-by-manager against Power BI's own "Covenant Earnings"
+  measure (not "EBIDAR" — a different measure in their model that nets
+  against the *actual* reported management fee, not the normalized 5%; it
+  is not the number to compare against ours) at the $13.4M waypoint found:
+  Extended Care, Lineage, Arcadia-ALF ties within ~$20K (noise); Evercare
+  resolved by the parser fix above; Lincoln has two compounding gaps — the
+  user fixed "2 buildings" missing on the Power BI side, and separately our
+  own `Nokomis Healthcare & Senior Living` is missing Mar-Aug 2026 (6
+  months) and needs those raw files; **Axiom (+$683K), Arcadia (+$459K),
+  and Goldwater (+$458K) remain unexplained** — none have missing months on
+  our side, so these are suspected to be more of the same kind of
+  mis-categorized account found twice already (Prior Year
+  Expenses/Adjustments, the 4 revenue items), not yet isolated. Next step:
+  facility-level "Covenant Earnings" breakdowns for these three managers,
+  same method as Goldwater/Watseka/Evercare. Lineage's Ironwood has zero
+  data in Power BI too (confirmed by the user) — consistent zero on both
+  sides, not a discrepancy, despite being a known gap in section 10a.
+
 - **Kesser's own revenue** (`fact_kesser_revenue`, the rent side) is
   **effective-dated, not monthly**. Rent changes only at step-ups. Do not
   require a row for every month — carry the last known effective value
@@ -649,11 +675,27 @@ June-August 2026 was loaded this date for Curis, Evercare, Extendicare,
 Lincoln, and Lineage (22 new raw files; see commit
 "Load June-August 2026 data across all operators"). Two gaps remain open
 from this load:
-- **Evercare**: Jul-Nov 2025 is still missing for the 4 Petersen SNF
-  Evercare facilities (Collinsville, Jerseyville, Lebanon, Swansea) — none
-  of the June-August 2026 uploads backfill this; it predates the window
-  those files cover. Surfaced during the Covenant Income reconciliation
-  with the user's Power BI numbers; still outstanding.
+- **RESOLVED 2026-10-28**: Sep-Nov 2025 was missing for the 4 Petersen SNF
+  Evercare facilities — not a data gap at all, but a parser bug.
+  `fce47447-4_Pack_PL_12.25.xlsx` (2025-vintage Evercare files are a
+  trailing multi-month export, one "Month Ending" column pair per month,
+  unlike the single-column 2026-vintage files) was being parsed as if it
+  were single-month: `find_period_date` read the "As of Date:" field
+  (giving the correct label, December 2025) but `parse_and_load` always
+  read VALUES from column 2 (January 2025's column) — silently mislabeling
+  January's Net Income as December's and never touching the other 11
+  months the file actually contained. Fixed by replacing both with
+  `find_period_columns()` in `parsers/evercare.py`, which scans the full
+  header row for every "Month Ending" column (excluding the trailing
+  "Period Ending" duplicate-anchor column, to avoid double-counting via
+  `insert_financial_fact`'s additive ON CONFLICT) and threads a `value_col`
+  parameter through `parse_and_load` instead of hardcoding column 2. Works
+  for both the 2025 multi-month shape and the 2026 single-column shape
+  under one code path (verified: single-month files still produce exactly
+  one period, unchanged). All 4 Evercare facilities now tie to Power BI's
+  Covenant Earnings exactly (to the penny) after a `--fresh` rebuild.
+  Portfolio facility-periods went from 938 to 989 (+51, matching 11 newly
+  unlocked months x ~4.6 avg facilities per month across this file).
 - **Lineage**: no July 2026 file was ever provided for any of the 4
   Lineage facilities with raw data (Irving Park, North Aurora, Sandwich,
   South Elgin) — only June and August `.xlsm` files exist, so July 2026
