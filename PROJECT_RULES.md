@@ -152,13 +152,33 @@ the source's reported Net Income to the dollar.
   Adjustments"` (a different, separate raw label used by other operators)
   — that one's own Power BI Dim_Account Grouping is "Revenue", a
   deliberately different account, and is unaffected by this change.
-  **Still open, NOT yet implemented**: a related finding from the same
-  lender classification-key screenshot showed "Other Unclassified Income",
-  "ALF Application Fee Income", "Day Care Income", and "Barber/Beauty
-  Income" (all currently `category="Other Income / Expense"`, excluded
-  from Operating Revenue) tagged by the lender as Total Revenue — a further
-  ~$1.7M T12 swing if confirmed and implemented. Pending user confirmation
-  with the lender before any mapping change.
+- **"Other Unclassified Income", "ALF Application Fee Income", "Day Care
+  Income", "Barber/Beauty Income" (Curis only)** are **Operating Revenue**
+  (category `"Other Operating Revenue"`, no sign change needed) — confirmed
+  by the user against the same lender classification key that flagged
+  these as "Total Revenue", not non-operating "Other Income / Expense".
+  Previously excluded from `operating_revenue` entirely. Combined with the
+  Prior Year Expenses/Adjustments fix above, this moved the T12 Lease
+  Covenant Test to a $1,750,181 surplus (from the original $223,691
+  breach). Net Income is unaffected by this change too (both the old and
+  new category are `statement_type='revenue'`, so the broad validation
+  bucket doesn't move) — verified unchanged for Arcadia Watseka Aug 2026
+  (-$88,650 before and after).
+
+- **Power BI double-counts "Prior Year Expenses / Adjustments" (Account
+  Key 158) — flagged to the user, not fixed on our end since it's their
+  model, not ours.** Its Dim_Account Grouping is "Operating Expense"
+  (correct, and already consistent with our fix above), but its Sub-Group
+  is still "Other Income / Expense" — if their "Other Income/Expense" or
+  NOI measure filters by Sub-Group rather than Grouping, this account gets
+  counted a second time there on top of Operating Expense. Confirmed via
+  Arcadia Watseka Aug 2026: every line through Earnings ties to Power BI
+  exactly, but Power BI's Other Income/Expense and NOI are each off from
+  ours by precisely $44,695 — the account's raw value — consistent with
+  this exact double-count. Our NOI matches the file's own reported Net
+  Income exactly; Power BI's does not, until this is fixed on their side
+  (change the Sub-Group off "Other Income / Expense", or point the measure
+  at Grouping instead).
 - **Kesser's own revenue** (`fact_kesser_revenue`, the rent side) is
   **effective-dated, not monthly**. Rent changes only at step-ups. Do not
   require a row for every month — carry the last known effective value
