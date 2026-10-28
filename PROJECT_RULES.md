@@ -132,8 +132,33 @@ the source's reported Net Income to the dollar.
 - **"Consulting"** as an account label refers to **Cherry**, a
   software/vendor cost — not a generic consulting expense. Map accordingly,
   not to a generic consulting line.
-- **"Prior Year Expenses/Adjustments"** is Revenue / Other, not an expense,
-  regardless of which section of the source it appears in.
+- **"Prior Year Expenses/Adjustments" (Curis only)** is **Operating Expense**,
+  category `"Prior Year Adjustments"`, with `sign_multiplier = -1` — this
+  corrects a prior version of this rule that had it backwards (Revenue /
+  Other Income-Expense, sign unchanged). Lender-confirmed 2026-10-28, and
+  independently corroborated by Power BI's own Dim_Account table, which
+  tags this exact account's Grouping as "Operating Expense" (its Sub-Group
+  was still mistakenly "Other Income / Expense" on Power BI's side — a
+  likely double-count bug there between measures that filter on Grouping
+  vs. Sub-Group, flagged to the user but not something we can fix). The
+  sign flip matters: most raw occurrences are *positive* (prior-year
+  expense credits/reversals), so correctly classified they *reduce* the
+  current period's Operating Expense rather than add to it. Verified
+  against Power BI for Goldwater Roseville Aug 2026: our Operating Expense
+  now ties to Power BI's figure exactly ($817,244.00) after this fix.
+  Portfolio-wide across the T12 window ending Aug 2026 (38 facility-periods,
+  all Curis brands), this moved the Lease Covenant Test from a $223,691
+  breach to a $128,983 surplus. Do NOT apply this to `"Rev - Prior Year
+  Adjustments"` (a different, separate raw label used by other operators)
+  — that one's own Power BI Dim_Account Grouping is "Revenue", a
+  deliberately different account, and is unaffected by this change.
+  **Still open, NOT yet implemented**: a related finding from the same
+  lender classification-key screenshot showed "Other Unclassified Income",
+  "ALF Application Fee Income", "Day Care Income", and "Barber/Beauty
+  Income" (all currently `category="Other Income / Expense"`, excluded
+  from Operating Revenue) tagged by the lender as Total Revenue — a further
+  ~$1.7M T12 swing if confirmed and implemented. Pending user confirmation
+  with the lender before any mapping change.
 - **Kesser's own revenue** (`fact_kesser_revenue`, the rent side) is
   **effective-dated, not monthly**. Rent changes only at step-ups. Do not
   require a row for every month — carry the last known effective value
