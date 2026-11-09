@@ -185,25 +185,29 @@ the source's reported Net Income to the dollar.
 - **Power BI reconciliation trail (2026-10-28), for context on the T12
   Covenant Income figure's history this date:** started at $11,445,109
   (pre-fixes) → $11,797,783 (Prior Year Expenses/Adjustments fix) →
-  $13,418,980 (+ the 4-revenue-item fix) → **$14,122,953** (+ the Evercare
-  parser fix above), required $11,668,799, final surplus **$2,454,154**.
+  $13,418,980 (+ the 4-revenue-item fix) → $14,122,953 (+ the Evercare
+  parser fix above) → **$14,186,802** (+ Nokomis closure, see 10a),
+  required $11,668,799, final surplus **$2,518,003**, 42 active facilities.
   Reconciling manager-by-manager against Power BI's own "Covenant Earnings"
   measure (not "EBIDAR" — a different measure in their model that nets
   against the *actual* reported management fee, not the normalized 5%; it
   is not the number to compare against ours) at the $13.4M waypoint found:
   Extended Care, Lineage, Arcadia-ALF ties within ~$20K (noise); Evercare
-  resolved by the parser fix above; Lincoln has two compounding gaps — the
+  resolved by the parser fix above; Lincoln's two compounding gaps — the
   user fixed "2 buildings" missing on the Power BI side, and separately our
-  own `Nokomis Healthcare & Senior Living` is missing Mar-Aug 2026 (6
-  months) and needs those raw files; **Axiom (+$683K), Arcadia (+$459K),
-  and Goldwater (+$458K) remain unexplained** — none have missing months on
-  our side, so these are suspected to be more of the same kind of
-  mis-categorized account found twice already (Prior Year
-  Expenses/Adjustments, the 4 revenue items), not yet isolated. Next step:
-  facility-level "Covenant Earnings" breakdowns for these three managers,
-  same method as Goldwater/Watseka/Evercare. Lineage's Ironwood has zero
-  data in Power BI too (confirmed by the user) — consistent zero on both
-  sides, not a discrepancy, despite being a known gap in section 10a.
+  own `Nokomis Healthcare & Senior Living` was missing Mar-Aug 2026 (6
+  months) — resolved: Nokomis closed (per the user), not a data gap, marked
+  `is_active=0` same as the two sold-off Evercare facilities (see 10a); still
+  worth re-checking Lincoln's tie-out now that both sides of that gap are
+  closed. **Axiom (+$683K), Arcadia (+$459K), and Goldwater (+$458K) remain
+  unexplained** — none have missing months on our side, so these are
+  suspected to be more of the same kind of mis-categorized account found
+  twice already (Prior Year Expenses/Adjustments, the 4 revenue items), not
+  yet isolated. Next step: facility-level "Covenant Earnings" breakdowns for
+  these three managers, same method as Goldwater/Watseka/Evercare. Lineage's
+  Ironwood has zero data in Power BI too (confirmed by the user) —
+  consistent zero on both sides, not a discrepancy, despite being a known
+  gap in section 10a.
 
 - **Kesser's own revenue** (`fact_kesser_revenue`, the rent side) is
   **effective-dated, not monthly**. Rent changes only at step-ups. Do not
@@ -708,6 +712,14 @@ from this load:
   deleted, so every dashboard page's `WHERE is_active = 1` filter
   excludes them automatically without losing their historical rows.
   Portfolio facility counts dropped from 55 to 53 active on this date.
+- **Lincoln's Nokomis Healthcare & Senior Living**: closed (per the user,
+  2026-11-09) — same `is_active = 0` treatment. Its apparent Mar-Aug 2026
+  "data gap" (flagged during the 2026-10-28 Power BI reconciliation,
+  section 4) was the facility ceasing to report, not missing raw files —
+  no files needed. Portfolio active count dropped from 53 to 52 on this
+  date; T12 Covenant Income rose to $14,186,802 (surplus $2,518,003) with
+  Nokomis excluded, since its incomplete partial-year data had been a drag
+  while it was still counted active.
 - **Lincoln**: census gap filled 2026-09-22 via `Lincoln_final_census.xlsx`
   (an interim, manually-consolidated Facility/Payor/Date/Days export
   covering Jan 2025–Apr 2026, loaded by
