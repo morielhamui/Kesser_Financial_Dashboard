@@ -45,24 +45,67 @@ for f in facilities:
     info = latest_by_facility.get(f["facility_id"])
     f["info"] = info
 
+# --- unreviewed changes (new citations + status changes), keyed the
+# same way citations are, so each citation row can carry its own flag ---
+unreviewed_by_key: dict[tuple, list] = {}
+for row in conn.execute("""
+    SELECT facility_id, survey_date, deficiency_prefix, deficiency_tag_number,
+           change_type, field_name, old_value, new_value, source_file, detected_at
+    FROM fact_cms_citation_changes
+    WHERE facility_id IN ({}) AND reviewed = 0
+    ORDER BY detected_at DESC
+""".format(",".join("?" * len(fac_ids))), list(fac_ids)):
+    key = (row["facility_id"], row["survey_date"], row["deficiency_prefix"], row["deficiency_tag_number"])
+    unreviewed_by_key.setdefault(key, []).append(dict(row))
+
 # --- citations, full history, grouped by facility ---
 citations_by_facility = {}
 for row in conn.execute("""
     SELECT facility_id, survey_date, survey_type, deficiency_prefix, deficiency_category,
            deficiency_tag_number, deficiency_description, scope_severity_code,
            deficiency_corrected, correction_date, standard_deficiency,
-           complaint_deficiency, infection_control_deficiency
+           complaint_deficiency, infection_control_deficiency,
+           first_seen_at, last_seen_at
     FROM fact_cms_citations
     WHERE facility_id IN ({})
     ORDER BY facility_id, survey_date DESC
 """.format(",".join("?" * len(fac_ids))), list(fac_ids)):
-    citations_by_facility.setdefault(row["facility_id"], []).append(dict(row))
+    d = dict(row)
+    key = (d["facility_id"], d["survey_date"], d["deficiency_prefix"], d["deficiency_tag_number"])
+    d["changes"] = unreviewed_by_key.get(key, [])
+    citations_by_facility.setdefault(row["facility_id"], []).append(d)
 
 for f in facilities:
     f["citations"] = citations_by_facility.get(f["facility_id"], [])
 
-out = {"facilities": facilities}
+# --- distinct option lists for filter dropdowns, drawn from CMS's own
+# data rather than hardcoded, so the UI always offers exactly the
+# options CMS gives (no invented categories) ---
+corrected_options = [r[0] for r in conn.execute(
+    "SELECT DISTINCT deficiency_corrected FROM fact_cms_citations WHERE deficiency_corrected IS NOT NULL ORDER BY 1"
+)]
+scope_severity_options = [r[0] for r in conn.execute(
+    "SELECT DISTINCT scope_severity_code FROM fact_cms_citations WHERE scope_severity_code IS NOT NULL ORDER BY 1"
+)]
+
+# --- "as of" tagline: the latest processing_date across every loaded
+# facility snapshot ---
+latest_processing_date = conn.execute(
+    "SELECT MAX(processing_date) FROM fact_cms_provider_info"
+).fetchone()[0]
+total_unreviewed = conn.execute(
+    "SELECT COUNT(*) FROM fact_cms_citation_changes WHERE reviewed = 0"
+).fetchone()[0]
+
+out = {
+    "facilities": facilities,
+    "corrected_options": corrected_options,
+    "scope_severity_options": scope_severity_options,
+    "latest_processing_date": latest_processing_date,
+    "total_unreviewed": total_unreviewed,
+}
 out_path = pathlib.Path(__file__).resolve().parent / "cms_data.json"
 out_path.write_text(json.dumps(out, default=str))
 print(f"Wrote {out_path} ({len(facilities)} facilities, "
-      f"{sum(len(f['citations']) for f in facilities)} citation rows)")
+      f"{sum(len(f['citations']) for f in facilities)} citation rows, "
+      f"{total_unreviewed} unreviewed changes)")

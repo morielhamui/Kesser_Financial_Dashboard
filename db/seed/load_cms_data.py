@@ -196,9 +196,26 @@ def load_provider_info(conn: sqlite3.Connection, path: pathlib.Path) -> None:
     print(f"  {len(ccn_to_facility)} facilities have a CCN on file")
 
 
+# Fields CMS can revise on an already-seen citation (vs. the ones that
+# identify the citation itself -- facility/survey/prefix/tag, which
+# define the row's uniqueness and can never "change" without becoming a
+# different citation). Any difference here is logged to
+# fact_cms_citation_changes as a change_type='status_change' row, one
+# per field, and left unreviewed for the dashboard's review queue.
+TRACKED_FIELDS = [
+    "scope_severity_code",
+    "deficiency_corrected",
+    "correction_date",
+    "citation_under_idr",
+    "citation_under_iidr",
+]
+
+
 def load_citations(conn: sqlite3.Connection, path: pathlib.Path) -> None:
     ccn_to_facility = ensure_ccns(conn)
-    matched = 0
+    new_count = 0
+    changed_count = 0
+    unchanged_count = 0
     unmatched_ccns: set[str] = set()
 
     if path.suffix.lower() == ".xlsx":
@@ -210,6 +227,8 @@ def load_citations(conn: sqlite3.Connection, path: pathlib.Path) -> None:
     else:
         fh = path.open(encoding="utf-8-sig")
         rows = csv.DictReader(fh)
+
+    now = datetime.datetime.utcnow().isoformat(timespec="seconds")
 
     for row in rows:
         ccn = str(row.get("CMS Certification Number (CCN)") or "").strip()
@@ -224,18 +243,76 @@ def load_citations(conn: sqlite3.Connection, path: pathlib.Path) -> None:
             continue
         values = {field: row.get(src_col) for src_col, field in CITATION_COLUMNS}
         values["correction_date"] = correction_date
-        columns = ["facility_id", "survey_date", "source_file"] + list(values.keys())
-        placeholders = ", ".join("?" for _ in columns)
-        conn.execute(
-            f"""
-            INSERT OR IGNORE INTO fact_cms_citations ({", ".join(columns)})
-            VALUES ({placeholders})
+        prefix = values.get("deficiency_prefix")
+        tag = values.get("deficiency_tag_number")
+
+        existing = conn.execute(
+            """
+            SELECT scope_severity_code, deficiency_corrected, correction_date,
+                   citation_under_idr, citation_under_iidr
+            FROM fact_cms_citations
+            WHERE facility_id = ? AND survey_date = ? AND deficiency_prefix = ?
+                  AND deficiency_tag_number = ?
             """,
-            [facility_id, survey_date, path.name] + list(values.values()),
-        )
-        matched += 1
+            (facility_id, survey_date, prefix, tag),
+        ).fetchone()
+
+        if existing is None:
+            columns = ["facility_id", "survey_date", "first_seen_source_file",
+                       "first_seen_at", "last_seen_source_file", "last_seen_at"] + list(values.keys())
+            placeholders = ", ".join("?" for _ in columns)
+            conn.execute(
+                f"INSERT INTO fact_cms_citations ({', '.join(columns)}) VALUES ({placeholders})",
+                [facility_id, survey_date, path.name, now, path.name, now] + list(values.values()),
+            )
+            conn.execute(
+                """
+                INSERT INTO fact_cms_citation_changes
+                    (facility_id, survey_date, deficiency_prefix, deficiency_tag_number,
+                     change_type, source_file, detected_at)
+                VALUES (?, ?, ?, ?, 'new', ?, ?)
+                """,
+                (facility_id, survey_date, prefix, tag, path.name, now),
+            )
+            new_count += 1
+            continue
+
+        old = dict(zip(TRACKED_FIELDS, existing))
+        diffs = {f: (old[f], values[f]) for f in TRACKED_FIELDS if (old[f] or None) != (values[f] or None)}
+        if diffs:
+            for field, (old_val, new_val) in diffs.items():
+                conn.execute(
+                    """
+                    INSERT INTO fact_cms_citation_changes
+                        (facility_id, survey_date, deficiency_prefix, deficiency_tag_number,
+                         change_type, field_name, old_value, new_value, source_file, detected_at)
+                    VALUES (?, ?, ?, ?, 'status_change', ?, ?, ?, ?, ?)
+                    """,
+                    (facility_id, survey_date, prefix, tag, field, old_val, new_val, path.name, now),
+                )
+            set_clause = ", ".join(f"{f} = ?" for f in TRACKED_FIELDS)
+            conn.execute(
+                f"""
+                UPDATE fact_cms_citations SET {set_clause}, last_seen_source_file = ?, last_seen_at = ?
+                WHERE facility_id = ? AND survey_date = ? AND deficiency_prefix = ? AND deficiency_tag_number = ?
+                """,
+                [values[f] for f in TRACKED_FIELDS] + [path.name, now, facility_id, survey_date, prefix, tag],
+            )
+            changed_count += 1
+        else:
+            conn.execute(
+                """
+                UPDATE fact_cms_citations SET last_seen_source_file = ?, last_seen_at = ?
+                WHERE facility_id = ? AND survey_date = ? AND deficiency_prefix = ? AND deficiency_tag_number = ?
+                """,
+                (path.name, now, facility_id, survey_date, prefix, tag),
+            )
+            unchanged_count += 1
+
     conn.commit()
-    print(f"fact_cms_citations: {matched} rows loaded from {path.name}")
+    print(f"fact_cms_citations: {new_count} new, {changed_count} changed, {unchanged_count} unchanged (from {path.name})")
+    if new_count or changed_count:
+        print(f"  {new_count + changed_count} rows added to the review queue (fact_cms_citation_changes, reviewed=0)")
     if unmatched_ccns:
         print(f"  {len(unmatched_ccns)} distinct CCNs in file have no matching facility_id (expected -- file covers other facilities too)")
 
