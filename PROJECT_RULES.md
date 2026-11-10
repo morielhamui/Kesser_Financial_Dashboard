@@ -152,18 +152,44 @@ the source's reported Net Income to the dollar.
   Adjustments"` (a different, separate raw label used by other operators)
   — that one's own Power BI Dim_Account Grouping is "Revenue", a
   deliberately different account, and is unaffected by this change.
-- **"Other Unclassified Income", "ALF Application Fee Income", "Day Care
-  Income", "Barber/Beauty Income" (Curis only)** are **Operating Revenue**
-  (category `"Other Operating Revenue"`, no sign change needed) — confirmed
-  by the user against the same lender classification key that flagged
-  these as "Total Revenue", not non-operating "Other Income / Expense".
-  Previously excluded from `operating_revenue` entirely. Combined with the
-  Prior Year Expenses/Adjustments fix above, this moved the T12 Lease
-  Covenant Test to a $1,750,181 surplus (from the original $223,691
-  breach). Net Income is unaffected by this change too (both the old and
-  new category are `statement_type='revenue'`, so the broad validation
-  bucket doesn't move) — verified unchanged for Arcadia Watseka Aug 2026
-  (-$88,650 before and after).
+- **The entire "Other Income / Expense" Sub-Group is Operating Revenue
+  EXCEPT "Interest Income" (Curis only)** — final rule, user-confirmed
+  2026-11-10: "the only thing our lender doesn't count is interest income -
+  everything else is included." Started 2026-10-28 as a 4-account fix
+  ("Other Unclassified Income", "ALF Application Fee Income", "Day Care
+  Income", "Barber/Beauty Income") based on the lender classification-key
+  screenshot, then expanded to all the rest once the user clarified the
+  full rule: "Flu Vaccinations", "Early Payment Discounts", "Employee
+  Retention Credit", "Visitor / Employee Meals", "Medical Records Income",
+  "Vending Commissions", "Meals - Residents" all moved the same way
+  (category `"Other Operating Revenue"`, no sign change needed).
+  "Interest Income" is the one label left at `category="Other Income /
+  Expense"` — deliberately excluded. (QIP-detail accounts — "QIP Revenue",
+  "C.N.A. Incentive Payments" — were already handled separately via the
+  existing QIP add-back and are unaffected by this rule.) Net Income is
+  unaffected (all these stay `statement_type='revenue'`, so the broad
+  validation bucket doesn't move) — verified unchanged for Arcadia Watseka
+  Aug 2026 (-$88,650 before and after every stage of this fix).
+
+  Discovered this was incomplete via the Power BI reconciliation
+  (section 4): after the first 4-account fix, Axiom/Arcadia/Goldwater
+  still showed large, same-direction, portfolio-wide gaps against Power
+  BI's own "Covenant Earnings" — traced to Power BI's `Total Operating
+  Revenue = [Total Resident Revenue] + [Ancillary Revenue] + [QIP
+  Revenue]` measure, which (same as the Prior Year Expenses double-count)
+  has no term at all for this Sub-Group's remaining accounts despite their
+  Dim_Account Grouping already saying "Revenue". Recommended Power BI fix
+  (not yet confirmed applied, unlike the two measures already fixed): add
+  a `[Other Operating Revenue]` measure filtering
+  `Dim_Account[Account] IN {<the 11 accounts above>}` and a 4th additive
+  term to `Total Operating Revenue`. Until that lands on their side, our
+  numbers will run higher than Power BI's by design — that gap does not
+  indicate a problem on our end.
+
+  T12 Lease Covenant Test history (Petersen SNF, this date): $1,750,181
+  surplus (first 4-account fix) → **$2,524,557 surplus** (full fix, all 52
+  active facilities) — see section 4's reconciliation-trail note for the
+  complete sequence including the Evercare parser fix and Nokomis closure.
 
 - **Power BI double-counts "Prior Year Expenses / Adjustments" (Account
   Key 158) — flagged to the user, not fixed on our end since it's their
@@ -182,32 +208,32 @@ the source's reported Net Income to the dollar.
   `KEEPFILTERS(Dim_Account[Grouping] <> "Operating Expense")` to the
   measure) and verified Watseka ties exactly afterward.
 
-- **Power BI reconciliation trail (2026-10-28), for context on the T12
-  Covenant Income figure's history this date:** started at $11,445,109
+- **Power BI reconciliation trail (2026-10-28 through 2026-11-10), for
+  context on the T12 Covenant Income figure's history:** $11,445,109
   (pre-fixes) → $11,797,783 (Prior Year Expenses/Adjustments fix) →
-  $13,418,980 (+ the 4-revenue-item fix) → $14,122,953 (+ the Evercare
-  parser fix above) → **$14,186,802** (+ Nokomis closure, see 10a),
-  required $11,668,799, final surplus **$2,518,003**, 42 active facilities.
-  Reconciling manager-by-manager against Power BI's own "Covenant Earnings"
-  measure (not "EBIDAR" — a different measure in their model that nets
-  against the *actual* reported management fee, not the normalized 5%; it
-  is not the number to compare against ours) at the $13.4M waypoint found:
-  Extended Care, Lineage, Arcadia-ALF ties within ~$20K (noise); Evercare
-  resolved by the parser fix above; Lincoln's two compounding gaps — the
-  user fixed "2 buildings" missing on the Power BI side, and separately our
-  own `Nokomis Healthcare & Senior Living` was missing Mar-Aug 2026 (6
-  months) — resolved: Nokomis closed (per the user), not a data gap, marked
-  `is_active=0` same as the two sold-off Evercare facilities (see 10a); still
-  worth re-checking Lincoln's tie-out now that both sides of that gap are
-  closed. **Axiom (+$683K), Arcadia (+$459K), and Goldwater (+$458K) remain
-  unexplained** — none have missing months on our side, so these are
-  suspected to be more of the same kind of mis-categorized account found
-  twice already (Prior Year Expenses/Adjustments, the 4 revenue items), not
-  yet isolated. Next step: facility-level "Covenant Earnings" breakdowns for
-  these three managers, same method as Goldwater/Watseka/Evercare. Lineage's
-  Ironwood has zero data in Power BI too (confirmed by the user) —
-  consistent zero on both sides, not a discrepancy, despite being a known
-  gap in section 10a.
+  $13,418,980 (first 4-item revenue fix) → $14,122,953 (+ the Evercare
+  parser fix) → $14,186,802 (+ Nokomis closure, see 10a) →
+  **$14,193,356** (+ the full "everything except Interest Income" revenue
+  rule, see section 4), required $11,668,799, final surplus
+  **$2,524,557**, 42 active facilities under this landlord.
+  Manager-by-manager reconciliation against Power BI's own "Covenant
+  Earnings" measure (not "EBIDAR" — a different measure in their model
+  that nets against the *actual* reported management fee, not the
+  normalized 5%; it is not the number to compare against ours) resolved
+  every open item: Extended Care, Lineage, Arcadia-ALF tied within ~$20K
+  (noise) from the start; Evercare resolved by the parser fix; Lincoln's
+  two compounding gaps (the user's own-side "2 buildings" fix, and
+  Nokomis closing) both resolved — worth a final re-check now that both
+  sides are closed; **Axiom, Arcadia, and Goldwater** (the three that
+  looked unexplained as of 2026-10-28) turned out to be the SAME root
+  cause as Prior Year Expenses/Adjustments, just on the revenue side: the
+  first narrow 4-item fix wasn't the complete lender rule. Confirmed by
+  summing the 4 reclassified items per manager and finding it matched
+  each manager's gap to ~95% (Axiom $697K sum vs. $662K gap; Arcadia
+  $484K vs. $460K; Goldwater $483K vs. $458K) — the expanded,
+  complete rule above closed the rest. Lineage's Ironwood has zero data
+  in Power BI too (confirmed by the user) — consistent zero on both
+  sides, not a discrepancy, despite being a known gap in section 10a.
 
 - **Kesser's own revenue** (`fact_kesser_revenue`, the rent side) is
   **effective-dated, not monthly**. Rent changes only at step-ups. Do not
