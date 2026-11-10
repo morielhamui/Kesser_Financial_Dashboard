@@ -831,21 +831,21 @@ differs from our internal brand name:
   CCN 146133 "Sandwich Living & Rehab Center", not the other same-town
   candidate at 113 beds)
 
-**Unresolved (2 of 36 CMS-certified Petersen SNF facilities — flagged,
-not guessed):** The Haven of Meadowbrook (facility_id 39) and Ironwood
-(facility_id 53) have no CMS provider matching either name under any
-town nationally. Ironwood is independently known to have zero raw
-financial or census files too (section 10a) and the user has confirmed
-it doesn't appear in Power BI either — consistent with it never having
-gone live / never having its own Medicare/Medicaid certification, not a
-crosswalk miss. Needs the user's confirmation of the correct legal/CMS
-name for both before they can be loaded.
+**All 35 CMS-certified Petersen SNF facilities now resolved.** The
+Haven of Meadowbrook (facility_id 39) was the one non-obvious case —
+CMS lists it under a completely different name, "Haven of Champaign"
+(CCN 146017, Champaign IL — confirmed by the user; "Meadowbrook" isn't
+a CMS city or provider name anywhere nationally).
 
 **Not CMS-certified (expected, not a gap):** the 6 ALF/independent-
 living units in the Petersen SNF portfolio — Gardens Kewanee, Villas
 Bushnell, Villas Herscher, Villas at Galva, Villas Kewanee, Villas at
-Havana — correctly have no CCN; CMS Nursing Home Compare only covers
-Medicare/Medicaid-certified SNF/ICF facilities.
+Havana — plus Ironwood (confirmed ALF by the user, despite being listed
+SNF/ICF-adjacent elsewhere) — correctly have no CCN; CMS Nursing Home
+Compare only covers Medicare/Medicaid-certified SNF/ICF facilities.
+Ironwood independently has zero raw financial or census files too
+(section 10a) and doesn't appear in Power BI either — all consistent
+with it never having gone live as a certified SNF.
 
 **Long-term refresh plan:** CMS republishes both files monthly via a
 public, unauthenticated API (`data.cms.gov/provider-data/api/.../

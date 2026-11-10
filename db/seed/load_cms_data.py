@@ -14,8 +14,11 @@ ALF and independent-living units (Gardens Kewanee, Villas Bushnell,
 Villas Herscher, Villas at Galva, Villas Kewanee, Villas at Havana) are
 correctly left with no CCN -- they aren't Medicare/Medicaid SNF-certified.
 
-The Haven of Meadowbrook and Ironwood have no confirmed CCN yet (no CMS
-provider matches either name under any town) -- flagged, not guessed.
+Ironwood is confirmed ALF (not Medicare/Medicaid SNF-certified, per the
+user) -- correctly has no CCN. The Haven of Meadowbrook is CMS-listed
+under a different name entirely ("Haven of Champaign", CCN 146017,
+Champaign IL) -- "Meadowbrook" isn't a CMS city/provider name at all,
+confirmed by the user.
 
 Usage:
     python3 db/seed/load_cms_data.py --provider-info <path to NH_ProviderInfo*.csv>
@@ -58,6 +61,7 @@ CCN_MAP: dict[int, str] = {
     36: "146050",  # The Haven of Arcola
     37: "145948",  # The Haven of Bement
     38: "146104",  # The Haven of Farmer City
+    39: "146017",  # The Haven of Meadowbrook (CMS: "Haven of Champaign")
     40: "146086",  # The Haven of Tuscola
     41: "145239",  # Goldwater Peoria Heights
     42: "146020",  # Goldwater Roseville
@@ -71,7 +75,7 @@ CCN_MAP: dict[int, str] = {
     55: "14E306",  # North Aurora (CMS: "North Aurora Living & Rehab Ctr")
     56: "146133",  # Sandwich (CMS: "Sandwich Living & Rehab Center")
     57: "145825",  # South Elgin (CMS: "South Elgin Living & Rehab Center")
-    # 39 (The Haven of Meadowbrook) and 53 (Ironwood): no confirmed CCN yet.
+    # 53 (Ironwood): confirmed ALF, not CMS-certified -- no CCN, not a gap.
 }
 
 PROVIDER_INFO_COLUMNS = [
