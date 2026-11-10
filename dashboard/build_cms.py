@@ -184,6 +184,7 @@ tbody tr.uncert td{color:var(--muted); font-style:italic;}
         <option value="fines_desc">Sort: Total fines $ (most first)</option>
       </select>
       <input class="search-input" id="searchInput" type="text" placeholder="Search facility...">
+      <button class="chip" id="exportTableBtn" type="button">Export CSV &darr;</button>
     </div>
   </div>
 
@@ -207,7 +208,7 @@ tbody tr.uncert td{color:var(--muted); font-style:italic;}
       </table>
     </div>
   </div>
-  <p class="footnote">Star ratings run 1&ndash;5 (5 = best). "SFF" = Special Focus Facility / Candidate status; "Abuse" flags CMS's Abuse Icon &mdash; click either stat tile above to see which facilities. Citations count is each facility's full on-file deficiency history; "not corrected" counts the two CMS statuses that mean work isn't done yet ("has plan of correction" and "has no plan of correction") &mdash; the other four (has date of correction, past non-compliance, waiver granted, no revisit needed) are CMS's own ways of saying the matter is closed. "New/changed" means this citation is new or its status changed since the last CMS file was loaded &mdash; click "Needs review" above for the full list across the portfolio. Fines totals are CMS's own all-time reported figures. Click a row to see the full citation list, with filters for every corrected-status and scope/severity option CMS reports.</p>
+  <p class="footnote">Star ratings run 1&ndash;5 (5 = best). "SFF" = Special Focus Facility / Candidate status; "Abuse" flags CMS's Abuse Icon &mdash; click either stat tile above to see which facilities. Citations count is each facility's full on-file deficiency history; "not corrected" counts the two CMS statuses that mean work isn't done yet ("has plan of correction" and "has no plan of correction") &mdash; the other four (has date of correction, past non-compliance, waiver granted, no revisit needed) are CMS's own ways of saying the matter is closed. "New/changed" means this citation is new or its status changed since the last CMS file was loaded &mdash; click "Needs review" above for the full list across the portfolio. Fines totals are CMS's own all-time reported figures. Click a row to see the full citation list, with filters for every corrected-status and scope/severity option CMS reports. "Export CSV" exports exactly what's currently filtered/sorted on screen &mdash; the facility table above, or whichever citation list is open.</p>
 </div>
 
 <div class="drill-backdrop" id="drillBackdrop" hidden>
@@ -267,6 +268,38 @@ function fmtMoney(v){
 function fmtDate(d){
   if (!d) return "–";
   return d;
+}
+
+// --- CSV export (via the `downloads` capability -- a page can never
+// trigger a save directly, only offer one on explicit viewer intent) ---
+function csvEscape(v){
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function toCsv(headers, rows){
+  const lines = [headers.map(csvEscape).join(",")];
+  rows.forEach(r => lines.push(r.map(csvEscape).join(",")));
+  return lines.join("\r\n");
+}
+async function exportCsv(filename, headers, rows){
+  const csv = toCsv(headers, rows);
+  if (typeof claude === "undefined" || !claude.use){
+    alert("Export isn't available outside the published artifact view.");
+    return;
+  }
+  const downloads = await claude.use("downloads");
+  if (!downloads){
+    alert("Downloads aren't available in this view.");
+    return;
+  }
+  try {
+    await downloads.save({filename, data: csv});
+  } catch (e){
+    if (e && e.code === "declined") return;
+    console.error("CSV export failed", e);
+    alert("Export failed: " + (e && e.message ? e.message : "unknown error"));
+  }
 }
 function notYetCorrectedCount(citations){
   return citations.filter(c => NOT_YET_CORRECTED.has(c.deficiency_corrected)).length;
@@ -345,12 +378,15 @@ function sortFacilities(list){
   return copy;
 }
 
+let lastRenderedList = [];
+
 function render(){
   buildBrandChips();
   buildStats();
   let list = FACILITIES.filter(f => !selBrand || f.manager === selBrand);
   if (searchTerm) list = list.filter(f => f.name.toLowerCase().includes(searchTerm.toLowerCase()));
   list = sortFacilities(list);
+  lastRenderedList = list;
 
   const body = document.getElementById("bodyRows");
   body.innerHTML = list.map(f => {
@@ -505,7 +541,8 @@ function renderCitationModal(title, subtitle){
     '<div class="drill-toolbar">'+
       '<div class="drill-toolbar-row">'+
         (citeShowFacility ? '<input class="search-input" id="citeFacilitySearch" type="text" placeholder="Search facility..." value="'+citeFacilitySearch.replace(/"/g,"&quot;")+'" style="margin-left:0;">' : '<span class="toolbar-label">Corrected status</span>')+
-        '<select class="drill-sort-select" id="citeSortSelect">'+sortOptions+'</select></div>'+
+        '<select class="drill-sort-select" id="citeSortSelect" style="'+(citeShowFacility?'':'margin-left:auto;')+'">'+sortOptions+'</select>'+
+        '<button class="chip-sm" id="citeExportBtn" type="button">Export CSV &darr;</button></div>'+
       (citeShowFacility ? '<div class="drill-toolbar-row"><span class="toolbar-label">Corrected status</span></div>' : '')+
       '<div class="filter-chips">'+statusChips+'</div>'+
       '<div class="drill-toolbar-row"><span class="toolbar-label">Scope/Severity</span></div>'+
@@ -517,6 +554,25 @@ function renderCitationModal(title, subtitle){
   if (citeShowFacility) {
     document.getElementById("citeFacilitySearch").oninput = e => { citeFacilitySearch = e.target.value; renderCitationModal(); };
   }
+  document.getElementById("citeExportBtn").onclick = () => {
+    const headers = (citeShowFacility ? ["Facility","Manager"] : []).concat([
+      "Survey Date","Prefix","Tag","Category","Description","Scope/Severity",
+      "Corrected Status","Correction Date","Standard","Complaint","Infection Control","New/Changed",
+    ]);
+    const rows = filtered.map(c => {
+      const changes = c.changes || [];
+      const flag = changes.some(ch => ch.change_type === "new") ? "New" : (changes.length ? "Changed" : "");
+      const base = [
+        c.survey_date, c.deficiency_prefix||"", c.deficiency_tag_number||"", c.deficiency_category||"",
+        c.deficiency_description||"", c.scope_severity_code||"",
+        c.deficiency_corrected||"", c.correction_date||"",
+        c.standard_deficiency||"", c.complaint_deficiency||"", c.infection_control_deficiency||"", flag,
+      ];
+      return citeShowFacility ? [c.facility_name, c.manager].concat(base) : base;
+    });
+    const name = (citeShowFacility ? "cms_citations_all" : "cms_citations_" + renderCitationModal._title.replace(/[^a-z0-9]+/gi, "_")) + ".csv";
+    exportCsv(name, headers, rows);
+  };
   Array.from(body.querySelectorAll("[data-status]")).forEach(btn => {
     btn.onclick = () => {
       const v = btn.dataset.status;
@@ -541,6 +597,24 @@ document.getElementById("drillBackdrop").addEventListener("click", e => { if (e.
 
 document.getElementById("sortSelect").onchange = e => { sortMode = e.target.value; render(); };
 document.getElementById("searchInput").oninput = e => { searchTerm = e.target.value; render(); };
+document.getElementById("exportTableBtn").onclick = () => {
+  const headers = ["Facility","Manager","CCN","Overall Rating","Health Inspection Rating","Staffing Rating","QM Rating",
+    "SFF Status","Abuse Icon","Total Citations","Not Yet Corrected","New/Changed","Total Fines $","Number of Fines","Last Survey Date"];
+  const rows = lastRenderedList.map(f => {
+    const info = f.info;
+    const lastSurvey = f.citations.length ? f.citations[0].survey_date : "";
+    return [
+      f.name, f.manager, f.ccn || "",
+      info ? info.overall_rating : "", info ? info.health_inspection_rating : "",
+      info ? info.staffing_rating : "", info ? info.qm_rating : "",
+      info ? (info.special_focus_status||"") : "", info ? (info.abuse_icon||"") : "",
+      f.citations.length, notYetCorrectedCount(f.citations), flagCount(f),
+      info ? (info.total_fines_dollars||0) : "", info ? (info.number_of_fines||0) : "",
+      lastSurvey,
+    ];
+  });
+  exportCsv("cms_facility_roster_" + (DATA.latest_processing_date||"export") + ".csv", headers, rows);
+};
 
 render();
 </script>
