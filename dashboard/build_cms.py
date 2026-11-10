@@ -237,15 +237,23 @@ const SCOPE_SEVERITY_OPTIONS = DATA.scope_severity_options;
 // offers every option CMS gives, unfiltered).
 const NOT_YET_CORRECTED = new Set(["Deficient, Provider has plan of correction", "Deficient, Provider has no plan of correction"]);
 
+const ALL_CITATIONS = FACILITIES.flatMap(f => f.citations.map(c => Object.assign({}, c, {
+  facility_name: f.name, facility_id: f.facility_id, manager: f.manager
+})));
+
 let selBrand = "";
 let sortMode = "name";
 let searchTerm = "";
 
-// per-citation-modal filter/sort state, reset each time a facility is opened
+// citation-modal state: which set of citations is currently open (a
+// single facility's, or the whole portfolio's), plus filter/sort,
+// reset fresh every time the modal is opened
+let citeSource = [];       // the citation list currently being browsed
+let citeShowFacility = false;
+let citeFacilitySearch = "";
 let citeSort = "date_desc";
 let citeStatusFilter = new Set(CORRECTED_OPTIONS);
 let citeScopeFilter = new Set(SCOPE_SEVERITY_OPTIONS);
-let openFacilityId = null;
 
 function stars(n){
   if (n === null || n === undefined) return '<span class="stars">&ndash;</span>';
@@ -275,6 +283,8 @@ function buildStats(){
   const sffFacilities = certified.filter(f => f.info.special_focus_status);
   const abuseFacilities = certified.filter(f => f.info.abuse_icon === "Y");
   const totalFines = certified.reduce((s,f) => s + (f.info.total_fines_dollars||0), 0);
+  const totalCitations = ALL_CITATIONS.length;
+  const notYetTotal = ALL_CITATIONS.filter(c => NOT_YET_CORRECTED.has(c.deficiency_corrected)).length;
   const stats = [
     {label:"Facilities tracked", value: certified.length + " / " + FACILITIES.length, foot:"CMS-certified / total"},
     {label:"Avg. overall rating", value: avgOverall + "★", foot:"across certified facilities", cls: avgOverall!=="–" && avgOverall < 3 ? "bad" : ""},
@@ -282,6 +292,8 @@ function buildStats(){
       onclick: () => openFacilityList("Special Focus Facilities", "SFF or SFF Candidate status", sffFacilities.map(f => ({name:f.name, meta:f.manager+" · "+f.info.special_focus_status})))},
     {label:"Abuse icon flagged", value: String(abuseFacilities.length), foot:"click to see which", cls: abuseFacilities.length>0?"bad":"",
       onclick: () => openFacilityList("Abuse Icon Flagged", "CMS Abuse Icon = Y", abuseFacilities.map(f => ({name:f.name, meta:f.manager})))},
+    {label:"Total citations", value: String(totalCitations), foot: notYetTotal + " not yet corrected · click to browse/filter", cls: notYetTotal>0?"warn":"",
+      onclick: () => openAllCitations()},
     {label:"Needs review", value: String(DATA.total_unreviewed), foot:"new or changed since last upload", cls: DATA.total_unreviewed>0?"warn":"",
       onclick: () => openReviewQueue()},
     {label:"Total fines (all-time)", value: fmtMoney(totalFines), foot:"CMS-reported, cumulative", cls: totalFines>0?"bad":""},
@@ -408,18 +420,32 @@ function openReviewQueue(){
 
 // --- per-facility citation drill, with sort + the exact filter options CMS gives ---
 function openCitations(facilityId){
-  openFacilityId = facilityId;
+  const f = FACILITIES.find(x => x.facility_id === facilityId);
+  if (!f) return;
+  citeSource = f.citations;
+  citeShowFacility = false;
+  citeFacilitySearch = "";
   citeSort = "date_desc";
   citeStatusFilter = new Set(CORRECTED_OPTIONS);
   citeScopeFilter = new Set(SCOPE_SEVERITY_OPTIONS);
-  renderCitationModal();
+  renderCitationModal(f.name, (f.ccn ? "CCN " + f.ccn + " · " : "") + f.citations.length + " citations on file");
 }
 
-function renderCitationModal(){
-  const f = FACILITIES.find(x => x.facility_id === openFacilityId);
-  if (!f) return;
-  document.getElementById("drillTitle").textContent = f.name;
-  document.getElementById("drillSub").textContent = (f.ccn ? "CCN " + f.ccn + " · " : "") + f.citations.length + " citations on file";
+// portfolio-wide citation browser, opened from the "Total citations" tile
+function openAllCitations(){
+  citeSource = ALL_CITATIONS;
+  citeShowFacility = true;
+  citeFacilitySearch = "";
+  citeSort = "date_desc";
+  citeStatusFilter = new Set(CORRECTED_OPTIONS);
+  citeScopeFilter = new Set(SCOPE_SEVERITY_OPTIONS);
+  renderCitationModal("All Citations", ALL_CITATIONS.length + " citations across every CMS-certified facility");
+}
+
+function renderCitationModal(title, subtitle){
+  if (title !== undefined) { renderCitationModal._title = title; renderCitationModal._sub = subtitle; }
+  document.getElementById("drillTitle").textContent = renderCitationModal._title;
+  document.getElementById("drillSub").textContent = renderCitationModal._sub;
   const body = document.getElementById("drillBody");
 
   const statusChips = CORRECTED_OPTIONS.map(opt =>
@@ -429,16 +455,23 @@ function renderCitationModal(){
     '<button class="chip-sm' + (citeScopeFilter.has(opt)?" active":"") + '" data-scope="' + opt + '" type="button">' + opt + '</button>'
   ).join("");
 
-  let filtered = f.citations.filter(c => citeStatusFilter.has(c.deficiency_corrected) && citeScopeFilter.has(c.scope_severity_code));
+  let filtered = citeSource.filter(c => citeStatusFilter.has(c.deficiency_corrected) && citeScopeFilter.has(c.scope_severity_code));
+  if (citeShowFacility && citeFacilitySearch){
+    const term = citeFacilitySearch.toLowerCase();
+    filtered = filtered.filter(c => c.facility_name.toLowerCase().includes(term) || (c.manager||"").toLowerCase().includes(term));
+  }
   filtered = filtered.slice().sort((a,b) => {
     if (citeSort === "scope_desc") return (b.scope_severity_code||"").localeCompare(a.scope_severity_code||"") || b.survey_date.localeCompare(a.survey_date);
     if (citeSort === "scope_asc") return (a.scope_severity_code||"").localeCompare(b.scope_severity_code||"") || b.survey_date.localeCompare(a.survey_date);
     if (citeSort === "date_asc") return a.survey_date.localeCompare(b.survey_date);
+    if (citeSort === "facility") return a.facility_name.localeCompare(b.facility_name) || b.survey_date.localeCompare(a.survey_date);
     return b.survey_date.localeCompare(a.survey_date);
   });
 
+  const MAX_RENDER = 400;
+  const overflow = filtered.length - MAX_RENDER;
   const listHtml = filtered.length
-    ? filtered.map(c => {
+    ? filtered.slice(0, MAX_RENDER).map(c => {
         const flags = [];
         if (c.standard_deficiency === "Y") flags.push('<span class="badge muted">Standard</span>');
         if (c.complaint_deficiency === "Y") flags.push('<span class="badge warn">Complaint</span>');
@@ -450,8 +483,9 @@ function renderCitationModal(){
         const changeDetail = (!isNew && changes.length)
           ? '<div class="change-detail">' + changes.map(ch => ch.field_name + ': "'+(ch.old_value||"–")+'" &rarr; "'+(ch.new_value||"–")+'"').join("<br>") + '</div>'
           : "";
+        const tagLabel = (citeShowFacility ? c.facility_name + " &middot; " : "") + (c.deficiency_prefix||"")+(c.deficiency_tag_number||"")+' &middot; Scope/Severity '+(c.scope_severity_code||"–");
         return '<div class="cite-row' + (changes.length?" flagged":"") + '">'+
-          '<div class="cite-head"><span class="cite-tag">'+(c.deficiency_prefix||"")+(c.deficiency_tag_number||"")+' &middot; Scope/Severity '+(c.scope_severity_code||"–")+'</span><span class="cite-date">'+c.survey_date+'</span></div>'+
+          '<div class="cite-head"><span class="cite-tag">'+tagLabel+'</span><span class="cite-date">'+c.survey_date+'</span></div>'+
           '<div class="cite-desc">'+(c.deficiency_description||"")+'</div>'+
           '<div class="cite-correction">'+(c.deficiency_corrected||"–")+(c.correction_date?' · corrected '+c.correction_date:'')+'</div>'+
           '<div class="cite-flags">'+flags.join(" ")+'</div>'+
@@ -459,23 +493,30 @@ function renderCitationModal(){
           '</div>';
       }).join("")
     : '<div class="cite-empty">No citations match the current filters.</div>';
+  const overflowNote = overflow > 0 ? '<div class="cite-empty">+ ' + overflow + ' more match these filters &mdash; narrow the filters above to see them.</div>' : "";
+
+  const sortOptions = '<option value="date_desc"'+(citeSort==="date_desc"?" selected":"")+'>Sort: Survey date (newest)</option>'+
+          '<option value="date_asc"'+(citeSort==="date_asc"?" selected":"")+'>Sort: Survey date (oldest)</option>'+
+          '<option value="scope_desc"'+(citeSort==="scope_desc"?" selected":"")+'>Sort: Scope/Severity (highest)</option>'+
+          '<option value="scope_asc"'+(citeSort==="scope_asc"?" selected":"")+'>Sort: Scope/Severity (lowest)</option>' +
+          (citeShowFacility ? '<option value="facility"'+(citeSort==="facility"?" selected":"")+'>Sort: Facility name</option>' : "");
 
   body.innerHTML =
     '<div class="drill-toolbar">'+
-      '<div class="drill-toolbar-row"><span class="toolbar-label">Corrected status</span>'+
-        '<select class="drill-sort-select" id="citeSortSelect">'+
-          '<option value="date_desc"'+(citeSort==="date_desc"?" selected":"")+'>Sort: Survey date (newest)</option>'+
-          '<option value="date_asc"'+(citeSort==="date_asc"?" selected":"")+'>Sort: Survey date (oldest)</option>'+
-          '<option value="scope_desc"'+(citeSort==="scope_desc"?" selected":"")+'>Sort: Scope/Severity (highest)</option>'+
-          '<option value="scope_asc"'+(citeSort==="scope_asc"?" selected":"")+'>Sort: Scope/Severity (lowest)</option>'+
-        '</select></div>'+
+      '<div class="drill-toolbar-row">'+
+        (citeShowFacility ? '<input class="search-input" id="citeFacilitySearch" type="text" placeholder="Search facility..." value="'+citeFacilitySearch.replace(/"/g,"&quot;")+'" style="margin-left:0;">' : '<span class="toolbar-label">Corrected status</span>')+
+        '<select class="drill-sort-select" id="citeSortSelect">'+sortOptions+'</select></div>'+
+      (citeShowFacility ? '<div class="drill-toolbar-row"><span class="toolbar-label">Corrected status</span></div>' : '')+
       '<div class="filter-chips">'+statusChips+'</div>'+
       '<div class="drill-toolbar-row"><span class="toolbar-label">Scope/Severity</span></div>'+
       '<div class="filter-chips">'+scopeChips+'</div>'+
     '</div>'+
-    '<div class="gl-flat" style="padding-top:0;">'+listHtml+'</div>';
+    '<div class="gl-flat" style="padding-top:0;">'+listHtml+overflowNote+'</div>';
 
   document.getElementById("citeSortSelect").onchange = e => { citeSort = e.target.value; renderCitationModal(); };
+  if (citeShowFacility) {
+    document.getElementById("citeFacilitySearch").oninput = e => { citeFacilitySearch = e.target.value; renderCitationModal(); };
+  }
   Array.from(body.querySelectorAll("[data-status]")).forEach(btn => {
     btn.onclick = () => {
       const v = btn.dataset.status;
@@ -494,7 +535,7 @@ function renderCitationModal(){
   document.getElementById("drillBackdrop").hidden = false;
 }
 
-function closeDrill(){ document.getElementById("drillBackdrop").hidden = true; openFacilityId = null; }
+function closeDrill(){ document.getElementById("drillBackdrop").hidden = true; }
 document.getElementById("drillClose").onclick = closeDrill;
 document.getElementById("drillBackdrop").addEventListener("click", e => { if (e.target.id === "drillBackdrop") closeDrill(); });
 
