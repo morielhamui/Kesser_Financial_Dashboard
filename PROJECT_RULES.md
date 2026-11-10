@@ -768,6 +768,97 @@ from this load:
 - **Extendicare**: 4 Balance Sheet files (no P&L/Net Income data) are
   intentionally skipped by the parser, not counted as failures.
 
+## 10b. CMS Care Compare Data (star ratings, staffing, citations, fines)
+
+Added 2026-11-10 (migration 010) to support the live web app's planned
+CMS tracking (citations, star ratings, QM — raised by the user ahead of
+the Azure build). Two tables, both keyed off a new `dim_facility.ccn`
+column (CMS Certification Number — the join key CMS's own files use):
+
+```
+fact_cms_provider_info  — one row per facility per monthly CMS snapshot
+                           (processing_date): overall/health inspection/
+                           staffing/QM/long-stay/short-stay star ratings,
+                           SFF status, abuse icon, high performing icon,
+                           staffing hours (reported + case-mix), nursing/
+                           RN/administrator turnover, certified beds,
+                           avg residents/day, chain info, and the
+                           citations/fines/penalties summary fields
+                           (Number of Fines, Total Amount of Fines in
+                           Dollars, Number of Payment Denials, Total
+                           Number of Penalties, Number of Citations from
+                           Infection Control Inspections).
+fact_cms_citations       — one row per individual deficiency citation
+                           (CMS's NH_HealthCitations file): survey date/
+                           type, deficiency prefix/category/tag/
+                           description, scope severity code, corrected
+                           status + date, inspection cycle, standard/
+                           complaint/infection-control flags, IDR/IIDR
+                           status. No single natural key — dedup is on
+                           the full (facility_id, survey_date, tag,
+                           prefix, scope_severity) tuple.
+```
+
+Loaded by `db/seed/load_cms_data.py --provider-info <NH_ProviderInfo
+CSV> --citations <NH_HealthCitations CSV/XLSX>`. Both are the standard
+monthly CMS Provider Data Catalog exports (`data.cms.gov/provider-data`)
+— NH_ProviderInfo covers all ~14,686 US nursing homes (~8.8MB); the full
+national NH_HealthCitations file is ~165MB (over this connector's/this
+environment's size limits either way), so the user filters it to
+State='IL' in Excel before sharing (~25K rows, well under the limit) —
+sufficient since every Petersen SNF facility is in Illinois.
+
+**CCN crosswalk** (`CCN_MAP` in the loader) was built by matching each
+Petersen SNF facility's brand+town naming against NH_ProviderInfo's
+`Provider Name`/`City/Town`, since CMS's registered legal name often
+differs from our internal brand name:
+- `ARCADIA CARE <town>` → `Arcadia <town>`
+- `AXIOM HEALTHCARE OF <town>` → `Axiom <town>`; `Axiom Gardens of
+  <town>` → `Axiom Gardens <town>`
+- `GOLDWATER CARE <town>` → `Goldwater <town>`
+- `EVERCARE OF <town>` → our Evercare facilities (stored under bare
+  town names in `dim_facility`)
+- `THE HAVEN OF <town>` → our Haven/Extendicare facilities
+- Lincoln HC's legacy brand names carried over unchanged from before
+  Lincoln took the portfolio over: Mattoon → **Palm Garden of Mattoon**,
+  Pana → **Rose Garden of Pana** (not a literal name match — confirmed
+  by elimination against the other IL providers in the same town)
+- Lineage HC's 3 facilities are CMS-listed as "... Living & Rehab
+  Center" (not their brand name) — North Aurora, Sandwich, and South
+  Elgin each had 2+ same-town CMS candidates; disambiguated by exact
+  certified-bed-count match against the partner's August 2026 portfolio
+  scorecard (e.g. Sandwich Rehab & Health Care Center = 63 beds ties to
+  CCN 146133 "Sandwich Living & Rehab Center", not the other same-town
+  candidate at 113 beds)
+
+**Unresolved (2 of 36 CMS-certified Petersen SNF facilities — flagged,
+not guessed):** The Haven of Meadowbrook (facility_id 39) and Ironwood
+(facility_id 53) have no CMS provider matching either name under any
+town nationally. Ironwood is independently known to have zero raw
+financial or census files too (section 10a) and the user has confirmed
+it doesn't appear in Power BI either — consistent with it never having
+gone live / never having its own Medicare/Medicaid certification, not a
+crosswalk miss. Needs the user's confirmation of the correct legal/CMS
+name for both before they can be loaded.
+
+**Not CMS-certified (expected, not a gap):** the 6 ALF/independent-
+living units in the Petersen SNF portfolio — Gardens Kewanee, Villas
+Bushnell, Villas Herscher, Villas at Galva, Villas Kewanee, Villas at
+Havana — correctly have no CCN; CMS Nursing Home Compare only covers
+Medicare/Medicaid-certified SNF/ICF facilities.
+
+**Long-term refresh plan:** CMS republishes both files monthly via a
+public, unauthenticated API (`data.cms.gov/provider-data/api/.../
+metastore/.../dataset/items/{id}` → direct CSV `downloadURL`). This
+Claude Code sandbox cannot reach `data.cms.gov` at all (outside its
+allowed network domains — confirmed via both direct `curl` and the
+`web-fetch` agent, both failed at DNS resolution), so for now the user
+pulls the monthly files manually. Once the live Azure app exists, its
+Function App (which runs in Azure's own, unrestricted network) should
+get a Timer Trigger to pull both files automatically every month, filter
+to this portfolio's CCNs, and upsert — no manual step needed from then
+on.
+
 ## 11. Hosting
 
 Web front end (replacement for the old Power BI report) — pages to be
